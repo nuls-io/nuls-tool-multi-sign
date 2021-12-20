@@ -1,0 +1,189 @@
+@import './theme.scss';
+//@import './element-plus';
+@import './element';
+
+body,
+dl,
+dd,
+ul,
+ol,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+pre,
+form,
+input,
+textarea,
+p,
+hr,
+thead,
+tbody,
+tfoot,
+th,
+td {
+  margin: 0;
+  padding: 0;
+  font-family: poppins,inter,PingFangSC-Regular,microsoft yahei,sans-serif;
+}
+ul,
+ol {
+  list-style: none;
+}
+
+html {
+  height: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  height: 100%;
+  font-size: 14px;
+  color: $FColor;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+
+img {
+  border: none;
+  display: block;
+}
+
+input {
+  border: none;
+  background: transparent;
+}
+/*链接*/
+a {
+  text-decoration: none;
+  outline: none;
+  background: transparent;
+}
+a:link,
+a:visited,
+a:active,
+a:focus,
+a.active {
+  outline: none;
+  text-decoration: none;
+}
+a.line {
+  text-decoration: underline;
+}
+
+
+/*省略号*/
+.ellipsis {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+} /*单行省略*/
+.ellipsis-2 {
+  display: -webkit-box;
+  overflow: hidden;
+  word-break: break-all;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+} /*多行省略*/
+
+.click {
+  cursor: pointer;
+}
+
+/*清除浮动*/
+.clear:after {
+  content: "";
+  display: block;
+  clear: both;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+
+// 纵向滚动条和横向滚动条宽度
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+// 滚动条轨道样式
+::-webkit-scrollbar-track {
+
+  background-color: transparent;
+  outline: none;
+}
+
+// 滚动条滑块样式
+::-webkit-scrollbar-thumb {
+  border-radius: 2px;
+  //-webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+  background: transparent;
+}
+
+:hover::-webkit-scrollbar-thumb,body::-webkit-scrollbar-thumb {
+  background: #d8d8d8;
+  //background: $formItemColor
+}
+
+.pd-15 {
+  padding: 0 15px;
+}
+
+.link {
+  color: #608fff;
+  cursor: pointer;
+}
+
+.h5-label {
+  padding: 15px 0 8px;
+  font-size: 15px;
+}
+.holder {
+  color: $placeColor;
+}
+
+.label-text {
+  color: $placeColor;
+}
+
+.theme-text{
+  color: $BASE_NULS
+}
+.theme-bg {
+  background-color: $BG_NULS;
+}
+
+.nerve-chain {
+  .theme-text{
+    color: $BASE_NERVE
+  }
+  .theme-bg {
+    background-color: $BG_NERVE;
+  }
+}
+
+
+

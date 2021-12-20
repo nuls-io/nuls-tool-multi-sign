@@ -1,0 +1,166 @@
+@import './theme';
+
+.el-icon {
+  font-size: 16px;
+  cursor: pointer;
+}
+.el-tabs {
+  .el-tabs__header {
+    margin-bottom: 20px;
+  }
+  .el-tabs__item {
+    color: #9095A6;
+    font-size: 16px;
+    &:hover {
+      color: $BASE_NULS;
+    }
+  }
+  .el-tabs__item.is-active {
+    color: $BASE_NULS;
+  }
+  .el-tabs__active-bar {
+    background-color: $BASE_NULS;
+  }
+  .el-tabs__nav-wrap::after {
+    height: 1px;
+    background-color: #C8CDDD;
+  }
+}
+
+.el-textarea {
+  .el-textarea__inner {
+    border-radius: 10px;
+    padding: 8px 15px;
+    &:focus {
+      border-color: $BASE_NULS;
+    }
+    &::-webkit-input-placeholder{
+      color: $placeColor;
+    }
+  }
+}
+.el-input {
+  .el-input__inner {
+    border-radius: 10px;
+    height: 50px;
+    &:focus {
+      border-color: $BASE_NULS;
+    }
+    &::-webkit-input-placeholder{
+      color: $placeColor;
+    }
+  }
+}
+.el-select {
+  width: 100%;
+  .el-input.is-focus .el-input__inner, .el-input .el-input__inner {
+    &:focus {
+      border-color: $BASE_NULS;
+    }
+  }
+}
+
+.el-button--primary {
+  background-color: $BASE_NULS;
+  border-color: $BASE_NULS;
+  &:focus,
+  &:active {
+    background-color: $BASE_NULS;
+    border-color: $BASE_NULS;
+  }
+  &:hover {
+    background-color: $BASE_NULS;
+    border-color: $BASE_NULS;
+    opacity: 0.8;
+  }
+}
+.el-button.is-disabled {
+  background-color: $BASE_NULS;
+  border-color: $BASE_NULS;
+  opacity: 0.6;
+  &:focus,
+  &:hover {
+    background-color: $BASE_NULS;
+    border-color: $BASE_NULS;
+    opacity: 0.6;
+  }
+}
+.el-form {
+  .el-form-item {
+    margin-bottom: 20px;
+  }
+}
+
+.el-message {
+  width: 380px;
+  .el-message__content {
+    line-height: 20px;
+  }
+  @media screen and (max-width: 1200px) {
+    width: 350px;
+    min-width: 95%;
+  }
+}
+
+.el-overlay {
+  position: absolute;
+  .el-dialog {
+    border-radius: 10px;
+  }
+}
+
+
+.nerve-chain {
+  .el-tabs {
+    .el-tabs__item {
+      color: #9095A6;
+      &:hover {
+        color: $BASE_NERVE;
+      }
+    }
+    .el-tabs__item.is-active {
+      color: $BASE_NERVE;
+    }
+    .el-tabs__active-bar {
+      background-color: $BASE_NERVE;
+    }
+  }
+
+  .el-textarea {
+    .el-textarea__inner:focus {
+      border-color: $BASE_NERVE;
+    }
+  }
+
+  .el-textarea {
+    .el-textarea__inner:focus {
+      border-color: $BASE_NERVE;
+    }
+  }
+  .el-input {
+    .el-input__inner:focus {
+      border-color: $BASE_NERVE;
+    }
+  }
+  .el-select .el-input.is-focus .el-input__inner:focus, .el-select .el-input .el-input__inner:focus {
+    border-color: $BASE_NERVE;
+  }
+
+  .el-button--primary {
+    background-color: $BASE_NERVE;
+    border-color: $BASE_NERVE;
+    &:hover {
+      background-color: $BASE_NERVE;
+      border-color: $BASE_NERVE;
+    }
+  }
+  .el-button.is-disabled {
+    background-color: $BASE_NERVE;
+    border-color: $BASE_NERVE;
+    &:focus,
+    &:hover {
+      background-color: $BASE_NERVE;
+      border-color: $BASE_NERVE;
+    }
+  }
+}
