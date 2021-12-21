@@ -12,15 +12,15 @@
       />
     </div>
     <div v-else class="column">
-      <div class="content">
-        {{ prefix }}
-        {{ props.omit ? superLong(props.content, 10) : props.content }}
-      </div>
       <img
         src="../../assets/img/copy.svg"
         alt=""
         @click="copy(props.content)"
       />
+      <div class="content">
+        {{ prefix }}
+        {{ props.omit ? superLong(props.content, 10) : props.content }}
+      </div>
     </div>
   </div>
 </template>

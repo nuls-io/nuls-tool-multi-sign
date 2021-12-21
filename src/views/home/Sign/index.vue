@@ -15,7 +15,7 @@
           <h5>{{ $t('sign.sign2') }}</h5>
           <p>
             <span class="label-text">{{ $t('sign.sign3') }}</span>
-            <span>{{ $t('sign.sign4') }}</span>
+            <span>{{ $t('type.type' + txInfo.type) }}</span>
           </p>
           <p>
             <span class="label-text">{{ $t('sign.sign5') }}</span>
@@ -139,7 +139,7 @@ async function deSerialize(hex: string) {
     chain: props.chain
   });
   try {
-    const { coinData } = transfer.deSerialize(hex);
+    const { coinData, type } = transfer.deSerialize(hex);
     console.log(coinData, 'coinData');
     const { fromList, toList } = coinData;
     const { assetsChainId, assetsId, amount } = toList[0];
@@ -161,7 +161,8 @@ async function deSerialize(hex: string) {
       from: fromList[0].address,
       to: toList[0].address,
       amount: newAmount,
-      symbol
+      symbol,
+      type
     };
     const signedCount = transfer.getSignedCount(hex);
     const { minSignCount, signedInfo, pubkeyArray } = signedCount;

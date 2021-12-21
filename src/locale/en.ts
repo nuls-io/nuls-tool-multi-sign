@@ -1,63 +1,93 @@
 const en = {
   tab: {
     Sign: 'Sign',
-    CreateAddress: '创建地址',
-    CreateTx: '创建交易'
+    CreateAddress: 'Create address',
+    CreateTx: 'Create transaction'
   },
   sign: {
-    sign1: '请填入待签名的HEX',
-    sign2: '业务信息',
-    sign3: '交易类型',
-    sign4: '转账',
-    sign5: '金额',
-    sign6: '发送地址',
-    sign7: '接收地址',
-    sign8: '多签信息',
-    sign9: '已签名数量',
-    sign10: '仍需签名数',
+    sign1: 'Please fill in the HEX to be signed',
+    sign2: 'Business Information',
+    sign3: 'Transaction Type',
+    sign4: 'Transfer',
+    sign5: 'Amount',
+    sign6: 'Sending address',
+    sign7: 'Receiving address',
+    sign8: 'Multi-sign information',
+    sign9: 'Signed quantity',
+    sign10: 'Number of signatures still required',
     sign11:
-      '*本次签名为该笔多签交易最后一次签名，完成签名后交易将被广播至网络中',
-    sign12: '签名结果HEX',
-    sign13: '已签名',
-    sign14: '当前账户无签名权限'
+      '*This signature is the last signature of this multi-signature transaction.The transaction will be broadcast to the network after the signature is completed, ',
+    sign12: 'Signed HEX',
+    sign13: 'Signed',
+    sign14: 'The current account has no signature permission'
   },
   createAddress: {
     createAddress1:
-      '粘贴多个公钥，每个公钥之间用逗号隔开，应用将自动将信息拆分并填写在下方',
-    createAddress2: '公钥列表 丨 已添加数量：',
-    createAddress3: '请输入签名地址公钥',
-    createAddress4: '最少签名数量',
-    createAddress5: '地址: ',
-    createAddress6: '已生成多签地址'
+      'Paste multiple public keys, separate each public key with a comma, the application will automatically split the information and fill in the following',
+    createAddress2: 'Public key list 丨added:',
+    createAddress3: 'Please enter the public key of the signature address',
+    createAddress4: 'Minimum number of signatures',
+    createAddress5: 'Address:',
+    createAddress6: 'Multi-signature address has been generated'
   },
   createTx: {
-    createTx1: '请选择多签地址',
-    createTx2: '请选择资产',
-    createTx3: '可用：',
-    createTx4: '请输入转账金额',
-    createTx5: '请输入接收地址',
-    createTx6: '最大',
-    createTx7: '新增多签地址',
-    createTx8: '交易HEX'
+    createTx1: 'Please choose a multi-signature address',
+    createTx2: 'Please select an asset',
+    createTx3: 'Available:',
+    createTx4: 'Please enter the transfer amount',
+    createTx5: 'Please enter the receiving address',
+    createTx6: 'Max',
+    createTx7: 'Add a multi-signature address',
+    createTx8: 'Trading HEX'
   },
   public: {
-    public1: '生成多链地址',
-    public2: '已复制到剪切板',
-    public3: '公钥',
-    public4: '断开',
-    public5: '浏览器中查看'
+    public1: 'Generate multi-chain address',
+    public2: 'Copied to clipboard',
+    public3: 'Public Key',
+    public4: 'Disconnect',
+    public5: 'View in browser'
   },
   tip: {
-    tip1: '请输入最少签名数量',
-    tip2: '请输入数字',
-    tip3: '最少签名数量范围为2-15',
-    tip4: '最少签名数量不能超过公钥数量',
-    tip5: '请输入正确的地址',
-    tip6: '只支持普通转账交易',
-    tip7: '请输入有效转账数量',
-    tip8: '余额不足',
-    tip9: '解析HEX失败',
-    tip10: '交易已发出，等待区块确认'
+    tip1: 'Please enter the minimum number of signatures',
+    tip2: 'Please enter a number',
+    tip3: 'The minimum number of signatures is in the range of 2-15',
+    tip4: 'The minimum number of signatures cannot exceed the number of public keys',
+    tip5: 'Please enter the correct address',
+    tip6: 'Only support ordinary transfer transactions',
+    tip7: 'Please enter a valid transfer quantity',
+    tip8: 'Insufficient balance',
+    tip9: 'Failed to parse HEX',
+    tip10: 'Transaction has been sent, waiting for block confirmation'
+  },
+  type: {
+    undefined: '',
+    type0: 'All',
+    type1: 'Consensus reward',
+    type2: 'Transfer',
+    type3: 'Aliased',
+    type4: 'Register node',
+    type5: 'Stake',
+    type6: 'Cancel consensus',
+    type7: 'Yellow card',
+    type8: 'Red card',
+    type9: 'Unregister node',
+    type10: 'Cross Trading',
+    type11: 'Cross Register',
+    type12: 'Cross Cancellation',
+    type13: 'Add Cross Assets',
+    type14: 'Cancel Cross Assets',
+    type15: 'Contract creation',
+    type16: 'Call contract',
+    type17: 'Delete contract',
+    type18: 'Contract transfer',
+    type19: 'Contract return',
+    type20: 'Contract creation node',
+    type21: 'Contract Stake',
+    type22: 'Consensus contract consensus',
+    type23: 'Contract cancellation node',
+    type24: 'Verifier Change',
+    type25: 'Verifier initialization',
+    type26: 'Token cross chain transfer'
   }
 };
 

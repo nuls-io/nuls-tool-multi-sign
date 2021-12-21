@@ -236,7 +236,7 @@ export class NTransfer {
     const reader = new BufferReader(Buffer.from(txHex, 'hex'), 0);
     const tx = new txs.Transaction();
     tx.parse(reader);
-    // console.log(tx.signatures.toString("hex"), "signatures", tx)
+    console.log(tx.signatures.toString("hex"), "signatures", tx)
     const coinData = new CoinData(new BufferReader(tx.coinData, 0));
     for (let item in coinData) {
       // eslint-disable-next-line no-prototype-builtins
@@ -247,6 +247,7 @@ export class NTransfer {
       }
     }
     return {
+      type: tx.type,
       coinData
     };
   }
