@@ -2,9 +2,7 @@ import { divisionAndFix, genId, Plus, Times } from '@/utils/util';
 import config from '@/config';
 import http from '@/service';
 
-function getUrl(chain: string) {
-  return config[chain].apiUrl;
-}
+import type { RpcRes, AssetItem, NULSInfo, BroadCast } from './types';
 
 function createRPCParams(method: string, data: any): any {
   return {
@@ -22,16 +20,16 @@ export async function getNERVEAssets(address: string, all = false) {
     chainInfo.chainId,
     address
   ]);
-  const result: any = await http.post({
+  const result = await http.post<RpcRes<AssetItem[]>>({
     url: chainInfo.apiUrl,
     data: params
   });
-  const assetList: any[] = [];
+  const assetList: AssetItem[] = [];
   if (result.result) {
     if (all) {
       return [...result.result];
     }
-    result.result.map((v: any) => {
+    result.result.map(v => {
       if (v.totalBalance) {
         v.available = divisionAndFix(v.balanceStr, v.decimals, v.decimals);
         assetList.push(v);
@@ -41,7 +39,7 @@ export async function getNERVEAssets(address: string, all = false) {
   return assetList;
 }
 
-// 获取资产详情
+// 获取资产详情、nonce值
 export async function getAssetBalance(
   chain: string,
   address: string,
@@ -55,7 +53,7 @@ export async function getAssetBalance(
     assetsId,
     address
   ]);
-  const result: any = await http.post({
+  const result = await http.post<RpcRes<{ nonce: string }>>({
     url: chainInfo.apiUrl,
     data: params
   });
@@ -70,38 +68,39 @@ export async function getNULSAssets(address: string) {
 }
 
 // 获取NULS资产详情
-export async function getNULSInfo(address: string) {
+export async function getNULSInfo(address: string): Promise<AssetItem> {
   const chainInfo = config.NULS;
   const { apiUrl, chainId, assetId } = chainInfo;
   const params = createRPCParams('getAccount', [chainId, address]);
-  const result: any = await http.post({
+  const result = await http.post<RpcRes<NULSInfo>>({
     url: apiUrl,
     data: params
   });
-  const res = result.result;
-  if (res) {
-    res.available = divisionAndFix(res.balance, 8, 8);
+  const res = {} as AssetItem;
+  if (result.result) {
+    res.available = divisionAndFix(result.result.balance, 8, 8);
     res.chainId = chainId;
     res.assetId = assetId;
     res.decimals = 8;
     res.assetKey = chainId + '-' + assetId;
+    res.symbol = result.result.symbol;
   }
-  return res || {};
+  return res;
 }
 
 // 获取NULS链跨链资产资产列表
-export async function getCrossAssets(address: string) {
+export async function getCrossAssets(address: string): Promise<AssetItem[]> {
   const chainInfo = config.NULS;
   const params = createRPCParams('getAccountCrossLedgerList', [
     chainInfo.chainId,
     address
   ]);
-  const result: any = await http.post({
+  const result = await http.post<RpcRes<AssetItem[]>>({
     url: chainInfo.apiUrl,
     data: params
   });
   const res = result.result || [];
-  res.map((v: any) => {
+  res.map(v => {
     v.available = divisionAndFix(v.balance, v.decimals, v.decimals);
   });
   return res;
@@ -111,7 +110,7 @@ export async function getCrossAssets(address: string) {
 export async function broadcastTx(chain: string, txHex: string) {
   const chainInfo = config[chain];
   const params = createRPCParams('broadcastTx', [chainInfo.chainId, txHex]);
-  const result: any = await http.post({
+  const result = await http.post<RpcRes<BroadCast>>({
     url: chainInfo.apiUrl,
     data: params
   });

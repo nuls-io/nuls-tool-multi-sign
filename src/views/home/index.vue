@@ -1,6 +1,6 @@
 <template>
   <div class="main-wrapper pd-15">
-    <template v-if="!providerType">
+    <template v-if="!props.providerType">
       <ConnectWallet @connect="type => emit('connect', type)" />
     </template>
     <template v-else-if="!props.address">
@@ -41,7 +41,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
+import { nextTick, ref, watch } from 'vue';
 import ConnectWallet from './ConnectWallet/index.vue';
 import Button from '@/components/Button/index.vue';
 import CopyWrapper from '@/components/CopyWrapper/index.vue';
@@ -50,19 +50,23 @@ import CreateAddress from './CreateAddress/index.vue';
 import CreateTx from './CreateTx/index.vue';
 import { Tabs } from './types';
 
-const props = defineProps({
-  providerType: String,
-  address: String,
-  pub: String,
-  chain: String
-});
+const props = defineProps<{
+  providerType: string;
+  address: string;
+  pub: string;
+  chain: string;
+}>();
 
-const emit = defineEmits(['createAccount', 'connect']);
+// const emit = defineEmits(['createAccount', 'connect']);
+const emit = defineEmits<{
+  (e: 'createAccount'): void;
+  (e: 'connect'): void;
+}>();
 
 watch(
   () => [props.chain, props.address],
   () => {
-    resetFields();
+    nextTick(resetFields);
   }
 );
 
@@ -75,8 +79,8 @@ const currentTab = ref(Tabs.Sign);
 const SignRef = ref<InstanceType<typeof Sign>>();
 const CreateAddressRef = ref<InstanceType<typeof CreateAddress>>();
 const CreateTxRef = ref<InstanceType<typeof CreateTx>>();
-function tabChange(item) {
-  console.log(item.paneName);
+function tabChange() {
+  // console.log(item.paneName);
   // const tab = item.paneName;
   resetFields();
 }

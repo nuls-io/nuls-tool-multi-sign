@@ -26,15 +26,17 @@ const props = defineProps({
 
 const emit = defineEmits(['update:show', 'selectAddress', 'addAddress']);
 
-function hoverEnter(e) {
-  e.target.classList.add('theme-text');
+function hoverEnter(e: Event) {
+  const target = e.target as HTMLElement;
+  target.classList.add('theme-text');
 }
 
-function hoverOut(e) {
-  e.target.classList.remove('theme-text');
+function hoverOut(e: Event) {
+  const target = e.target as HTMLElement;
+  target.classList.remove('theme-text');
 }
 
-function selectAddress(address) {
+function selectAddress(address: string) {
   emit('selectAddress', address);
   emit('update:show', false);
 }
@@ -54,7 +56,7 @@ function addAddress() {
   background-color: #fff;
   width: 100%;
   border-radius: 10px;
-  box-shadow: 0px 0px 16px 0px rgba(81, 91, 125, 0.18);
+  box-shadow: 0 0 16px 0 rgba(81, 91, 125, 0.18);
   border: 1px solid #e9ebf3;
 
   .address-item,

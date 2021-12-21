@@ -82,13 +82,21 @@ import NERVELogo from '@/assets/img/Nerve.png';
 import useLang from '../../hooks/useLang';
 import useCopy from '@/hooks/useCopy';
 
-const props = defineProps({
-  address: String,
-  chain: String,
-  providerType: String
-});
-
-const emit = defineEmits(['switchChain', 'disconnect']);
+const props = defineProps<{
+  address: string;
+  chain: string;
+  providerType: string;
+}>();
+const emit = defineEmits<{
+  (e: 'switchChain', chain: string): void;
+  (e: 'disconnect'): void;
+}>();
+// const props = defineProps({
+//   address: String,
+//   chain: String,
+//   providerType: String
+// });
+// const emit = defineEmits(['switchChain', 'disconnect']);
 
 const chainList = {
   NULS: {
@@ -107,7 +115,7 @@ function showSwitchChain() {
   isShowSwitchChain.value = true;
 }
 
-function switchChain(chain) {
+function switchChain(chain: string) {
   if (chain === props.chain) return;
   emit('switchChain', chain);
 }

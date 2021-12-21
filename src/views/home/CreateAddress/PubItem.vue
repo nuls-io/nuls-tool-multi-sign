@@ -38,11 +38,11 @@ const props = defineProps({
 
 const emit = defineEmits(['del', 'update:pub']);
 
-function handleInput(e) {
+function handleInput(e: string) {
   emit('update:pub', e);
 }
 
-function delItem(index) {
+function delItem(index: number) {
   emit('del', index);
 }
 </script>

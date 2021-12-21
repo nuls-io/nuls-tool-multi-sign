@@ -6,18 +6,6 @@
           <span v-if="formModel.from">{{ superLong(formModel.from, 12) }}</span>
           <span v-else class="holder">{{ $t('createTx.createTx1') }}</span>
         </div>
-        <!--        <el-form-item prop="from" class="from-address-item">
-          <el-input
-            v-model="formModel.from"
-            :placeholder="$t('createTx.createTx1')"
-          ></el-input>
-          <AddressSelect
-            v-model:show="showAddressSelect"
-            :addressList="filteredAddressList"
-            @selectAddress="selectAddress"
-            @addAddress="addAddress"
-          />
-        </el-form-item>-->
         <AddressSelect
           v-model:show="showAddressSelect"
           :addressList="addressList"
@@ -85,17 +73,27 @@ import { NTransfer } from '@/utils/api';
 import { timesDecimals, superLong } from '@/utils/util';
 import config from '@/config';
 
-const props = defineProps({
-  chain: String,
-  pub: String
-});
+import type { ValidAddressInfo } from './types';
+import type { AssetItem } from '@/service/api/types';
+import type { AccountItem, MultiAddress } from '@/views/home/types';
 
-const emit = defineEmits(['addAddress']);
+// const props = defineProps({
+//   chain: String,
+//   pub: String
+// });
+// const emit = defineEmits(['addAddress']);
+const props = defineProps<{
+  chain: string;
+  pub: string;
+}>();
+const emit = defineEmits<{
+  (e: 'addAddress'): void;
+}>();
 
 const { t } = useI18n();
 
 const createTxForm = ref<InstanceType<typeof ElForm>>();
-const fromAddress = ref<HTMLElement>();
+const fromAddress = ref<HTMLElement | null>(null);
 
 const formModel = reactive({
   from: '',
@@ -132,7 +130,7 @@ const rules = reactive({
 });
 
 function validateFrom(rule: any, value: any, callback: any) {
-  let addressInfo = {};
+  let addressInfo: ValidAddressInfo = {} as ValidAddressInfo;
   try {
     addressInfo = nerve.verifyAddress(value);
     // addressInfo.type 1:主网地址 2：合约地址 3:多签地址
@@ -158,13 +156,16 @@ function validateAsset(rule: any, value: any, callback: any) {
 }
 
 function validateAmount(rule: any, value: any, callback: any) {
-  const decimals = chooseAsset.value?.decimals || 8;
+  const decimals = chooseAsset.value.decimals || 8;
   const reg = new RegExp(
     '^([1-9][\\d]{0,20}|0)(\\.[\\d]{0,' + decimals + '})?$'
   );
   if (!reg.exec(value)) {
     callback(t('tip.tip7'));
-  } else if (chooseAsset.value && chooseAsset.value.available - value < 0) {
+  } else if (
+    chooseAsset.value &&
+    Number(chooseAsset.value.available) - value < 0
+  ) {
     callback(t('tip.tip8'));
   } else {
     callback();
@@ -173,7 +174,7 @@ function validateAmount(rule: any, value: any, callback: any) {
 
 function validateTo(rule: any, value: any, callback: any) {
   // console.log(value, 4564)
-  let addressInfo = {};
+  let addressInfo: ValidAddressInfo = {} as ValidAddressInfo;
   try {
     addressInfo = nerve.verifyAddress(value);
     // addressInfo.type 1:主网地址 2：合约地址 3:多签地址
@@ -203,13 +204,13 @@ watch(
 const showAddressSelect = ref(false);
 const addressList = ref(initAddressList());
 
-function initAddressList() {
-  const accountList = storage.get('accountList') || [];
+function initAddressList(): MultiAddress[] {
+  const accountList: AccountItem[] = storage.get('accountList') || [];
   const currentAccount = accountList.find(v => v.pub === props.pub) || {};
   return currentAccount['multi_' + props.chain] || [];
 }
 
-function selectAddress(item) {
+function selectAddress(item: MultiAddress) {
   if (item.address !== formModel.from) {
     formModel.from = item.address;
     getAssets(item.address);
@@ -221,9 +222,9 @@ function addAddress() {
   emit('addAddress');
 }
 
-const assetsList = ref([]);
+const assetsList = ref<AssetItem[]>([]);
 
-async function getAssets(address) {
+async function getAssets(address: string) {
   if (props.chain === 'NERVE') {
     assetsList.value = await getNERVEAssets(address);
   } else {
@@ -231,15 +232,13 @@ async function getAssets(address) {
   }
 }
 
-const chooseAsset = computed(() => {
+const chooseAsset = computed<AssetItem>(() => {
   const asset = assetsList.value.find(v => v.assetKey === formModel.asset);
-  return asset || null;
+  return asset as AssetItem;
 });
 
 function max() {
-  if (chooseAsset.value) {
-    formModel.amount = chooseAsset.value.available;
-  }
+  formModel.amount = chooseAsset.value.available;
 }
 
 const txHex = ref('');
@@ -257,13 +256,15 @@ function submit() {
         fee: 0
       };
       const transfer = new NTransfer({
-        chain: props.chain
+        chain: props.chain as string
       });
       if (props.chain === 'NULS') {
         transferInfo.fee = 100000;
       }
       const inputOutput = await transfer.transferTransaction(transferInfo);
-      const multiInfo = addressList.value.find(v => v.address === from);
+      const multiInfo = addressList.value.find(
+        v => v.address === from
+      ) as MultiAddress;
       txHex.value = transfer.createMultiTransaction(
         inputOutput.inputs,
         inputOutput.outputs,

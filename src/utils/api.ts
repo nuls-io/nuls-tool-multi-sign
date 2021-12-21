@@ -122,7 +122,7 @@ export class NTransfer {
    * @param minSignCount 最小签名数
    * @param pubKeyArray 生成多签地址的公钥数组
    */
-  createMultiAddress(minSignCount: number, pubKeyArray: string[]) {
+  createMultiAddress(minSignCount: number | string, pubKeyArray: string[]) {
     Buffer.from('0145614a', 'hex');
     const chainId = this.chainInfo.chainId;
     const addressPrefix = this.chainInfo.prefix;

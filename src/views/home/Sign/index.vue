@@ -81,13 +81,16 @@ import {
 import config from '@/config';
 import { ElMessage } from 'element-plus';
 
+import type { TxInfo, SignInfo } from './types';
+import { AssetItem } from '@/service/api/types';
+
 const { t } = useI18n();
 
-const props = defineProps({
-  chain: String,
-  address: String,
-  pub: String
-});
+const props = defineProps<{
+  chain: string;
+  address: string;
+  pub: string;
+}>();
 
 const txHex = ref('');
 watch(
@@ -97,18 +100,18 @@ watch(
     if (val) {
       debounce(() => deSerialize(val), 500)();
     } else {
-      txInfo.value = {};
-      signInfo.value = {};
+      txInfo.value = {} as TxInfo;
+      signInfo.value = {} as SignInfo;
       errorMsg.value = '';
     }
   }
 );
 
 // 交易信息
-const txInfo = ref({});
+const txInfo = ref<TxInfo>({} as TxInfo);
 const errorMsg = ref('');
 // 签名信息
-const signInfo = ref({});
+const signInfo = ref<SignInfo>({} as SignInfo);
 
 // 仍需签名数
 const restCount = computed(() => {
@@ -152,7 +155,7 @@ async function deSerialize(hex: string) {
       const res = await getNERVEAssets(props.address, true);
       const assetInfo = res.find(
         v => v.chainId === assetsChainId && v.assetId === assetsId
-      );
+      ) as AssetItem;
       symbol = assetInfo.symbol;
       newAmount = divisionDecimals(amount, assetInfo.decimals);
     }
@@ -175,8 +178,8 @@ async function deSerialize(hex: string) {
     console.log(signInfo.value, 'signInfo');
     errorMsg.value = '';
   } catch (e) {
-    txInfo.value = {};
-    signInfo.value = {};
+    txInfo.value = {} as TxInfo;
+    signInfo.value = {} as SignInfo;
     errorMsg.value = t('tip.tip9');
     // console.log(e, '解析hex失败');
   }
@@ -212,8 +215,8 @@ async function submit() {
 
 function resetFields() {
   txHex.value = '';
-  txInfo.value = {};
-  signInfo.value = {};
+  txInfo.value = {} as TxInfo;
+  signInfo.value = {} as SignInfo;
   signHex.value = '';
   errorMsg.value = '';
 }

@@ -138,7 +138,7 @@ export default function useEthereum() {
     });
   }
 
-  function switchChain(chain: 'NULS' | 'NERVE') {
+  function switchChain(chain: string) {
     state.currentChain = chain;
     state.address = getAddress().address[chain];
     storage.set('currentChain', chain);

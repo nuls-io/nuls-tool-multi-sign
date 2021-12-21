@@ -53,28 +53,28 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, watch, PropType } from 'vue';
+import { computed, ref, watch } from 'vue';
 import Button from '@/components/Button/index.vue';
 import CopyWrapper from '@/components/CopyWrapper/index.vue';
 import PubItem from './PubItem.vue';
-import { superLong } from '@/utils/util';
 import { useI18n } from 'vue-i18n';
 import { NTransfer } from '@/utils/api';
 import storage from '@/utils/storage';
+import type { AccountItem, MultiAddress } from '@/views/home/types';
 
 interface ModelItem {
   pub: string;
   address: string;
 }
 
-const props = defineProps({
-  chain: String,
-  pub: String
-});
+const props = defineProps<{
+  chain: string;
+  pub: string;
+}>();
 
 const { t } = useI18n();
 
-let transfer: any = null;
+let transfer: NTransfer;
 watch(
   () => props.chain,
   val => {
@@ -165,9 +165,12 @@ const multiAddress = ref('');
 
 function createAddress() {
   const pubArray = validList.value.map(v => v.pub);
-  const address = transfer.createMultiAddress(minSignCount.value, pubArray);
-  const accountList = storage.get('accountList') || [];
-  accountList.map((item: any) => {
+  const address = transfer.createMultiAddress(
+    minSignCount.value as string,
+    pubArray
+  );
+  const accountList: AccountItem[] = storage.get('accountList') || [];
+  accountList.map(item => {
     if (item.pub === props.pub) {
       const multiItem = {
         address,
@@ -176,7 +179,9 @@ function createAddress() {
       };
       const multiAddress = 'multi_' + props.chain;
       if (item[multiAddress]) {
-        const exist = item[multiAddress].find(v => v.address === address);
+        const exist = item[multiAddress].find(
+          (v: MultiAddress) => v.address === address
+        );
         if (!exist) {
           item[multiAddress].push(multiItem);
         }

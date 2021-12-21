@@ -23,24 +23,35 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';
 
-const props = defineProps({
-  show: {
-    type: Boolean,
-    default: false
-  },
-  chainList: {
-    type: Object
-  },
-  current: String
-});
+const props = defineProps<{
+  show: boolean;
+  chainList: any;
+  current: string;
+}>();
 
-const emit = defineEmits(['update:show', 'change']);
+const emit = defineEmits<{
+  (e: 'update:show', show: boolean): void;
+  (e: 'change', chain: string): void;
+}>();
+
+// const props = defineProps({
+//   show: {
+//     type: Boolean,
+//     default: false
+//   },
+//   chainList: {
+//     type: Object
+//   },
+//   current: String
+// });
+//
+// const emit = defineEmits(['update:show', 'change']);
 
 const wrapper = ref<HTMLElement>();
 
 onMounted(() => {
   window.addEventListener('click', e => {
-    const target = e.target;
+    const target = e.target as HTMLElement;
     if (!props.show || !wrapper.value) return;
     if (!wrapper.value?.contains(target)) {
       emit('update:show', false);

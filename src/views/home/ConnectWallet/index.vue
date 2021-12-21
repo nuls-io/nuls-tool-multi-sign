@@ -16,12 +16,13 @@
 
 <script lang="ts" setup>
 import { providerList } from '@/hooks/useEthereum';
+import { ElMessage } from 'element-plus';
 
 const emit = defineEmits(['connect']);
 
-function connectProvider(provider) {
+function connectProvider(provider: string) {
   if (!window[provider]) {
-    this.$message({ message: 'No provider was found', type: 'warning' });
+    ElMessage.warning({ message: 'No provider was found' });
     return;
   }
   emit('connect', provider);

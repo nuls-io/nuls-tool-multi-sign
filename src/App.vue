@@ -28,6 +28,8 @@ import storage from '@/utils/storage';
 import { ElMessage } from 'element-plus';
 import useLang from '@/hooks/useLang';
 
+import type { AccountItem } from '@/views/home/types';
+
 const {
   address,
   providerType,
@@ -48,8 +50,8 @@ onMounted(() => {
   changeTheme(chain);
 });
 
-function changeTheme(chain) {
-  const root = document.getElementById('app');
+function changeTheme(chain: string) {
+  const root = document.getElementById('app') as HTMLElement;
   if (chain === 'NULS') {
     root.classList.remove('nerve-chain');
   } else {
@@ -57,12 +59,12 @@ function changeTheme(chain) {
   }
 }
 
-function handleSwitch(chain) {
+function handleSwitch(chain: string) {
   changeTheme(chain);
   switchChain(chain);
 }
 
-async function connectWallet(type) {
+async function connectWallet(type: string) {
   try {
     await connect(type);
   } catch (e) {
@@ -76,7 +78,8 @@ async function connectWallet(type) {
 async function createAccount() {
   try {
     const account = await generateAddress(config.NERVE, config.NULS);
-    const accountList = storage.get('accountList') || [];
+    const accountList: Omit<AccountItem, 'multi_NERVE' | 'multi_NULS'>[] =
+      storage.get('accountList') || [];
     const existIndex = accountList.findIndex(v => v.pub === account.pub);
     // 原来存在就替换，找不到就push
     if (existIndex > -1) {
