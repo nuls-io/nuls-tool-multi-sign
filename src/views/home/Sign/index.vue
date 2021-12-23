@@ -198,15 +198,18 @@ async function submit() {
     const transfer = new NTransfer({
       chain: props.chain
     });
-    signHex.value = await transfer.multiSign(
+    const hex = await transfer.multiSign(
       txHex.value,
       currentAccount.address.Ethereum,
       currentAccount.pub
     );
     if (restCount.value === 1) {
-      const res = await broadcastTx(props.chain, signHex.value);
+      const res = await broadcastTx(props.chain, hex);
       if (res && res.hash) {
         ElMessage.success(t('tip.tip10'));
+        signHex.value = hex;
+      } else {
+        ElMessage.error(t('tip.tip13'));
       }
     }
   } catch (e) {

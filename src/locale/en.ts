@@ -58,7 +58,10 @@ const en = {
     tip7: 'Please enter a valid transfer quantity',
     tip8: 'Insufficient balance',
     tip9: 'Failed to parse HEX',
-    tip10: 'Transaction has been sent, waiting for block confirmation'
+    tip10: 'Transaction has been sent, waiting for block confirmation',
+    tip11: 'The number of public keys cannot exceed 15',
+    tip12: 'Contains duplicate public keys',
+    tip13: 'Broadcast tx failed'
   },
   type: {
     undefined: '',

@@ -20,7 +20,9 @@
         {{ superLong(address, 12) }}
       </template>
       <template v-else>
-        <span class="invalid-pub">Invalid pub</span>
+        <span class="invalid-pub">
+          {{ $t('createAddress.createAddress7') }}
+        </span>
       </template>
     </p>
   </div>

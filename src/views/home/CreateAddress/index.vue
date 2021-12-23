@@ -61,6 +61,7 @@ import { useI18n } from 'vue-i18n';
 import { NTransfer } from '@/utils/api';
 import storage from '@/utils/storage';
 import type { AccountItem, MultiAddress } from '@/views/home/types';
+import { ElMessage } from 'element-plus';
 
 interface ModelItem {
   pub: string;
@@ -166,6 +167,15 @@ const multiAddress = ref('');
 
 function createAddress() {
   const pubArray = validList.value.map(v => v.pub);
+  if (pubArray.length > 15 || pubArray.length < minSignCount.value) {
+    ElMessage.warning(t('tip.tip11'));
+    return;
+  }
+  const filterPubs = [...new Set(pubArray)];
+  if (filterPubs.length !== pubArray.length) {
+    ElMessage.warning(t('tip.tip12'));
+    return;
+  }
   const address = transfer.createMultiAddress(
     minSignCount.value as string,
     pubArray
