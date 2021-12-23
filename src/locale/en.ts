@@ -28,7 +28,8 @@ const en = {
     createAddress3: 'Please enter the public key of the signature address',
     createAddress4: 'Minimum number of signatures',
     createAddress5: 'Address:',
-    createAddress6: 'Multi-signature address has been generated'
+    createAddress6: 'Multi-signature address has been generated',
+    createAddress7: 'Invalid pub'
   },
   createTx: {
     createTx1: 'Please choose a multi-signature address',

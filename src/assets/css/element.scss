@@ -104,6 +104,9 @@
 
 .el-overlay {
   position: absolute;
+  .el-overlay-dialog {
+    position: absolute;
+  }
   .el-dialog {
     border-radius: 10px;
   }

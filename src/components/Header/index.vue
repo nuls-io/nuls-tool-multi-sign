@@ -36,7 +36,7 @@
       custom-class="account-dialog"
       title=""
       :show-close="false"
-      width="30%"
+      width="90%"
       :append-to-body="false"
     >
       <div class="close">

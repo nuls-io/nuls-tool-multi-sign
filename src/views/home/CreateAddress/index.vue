@@ -94,6 +94,7 @@ const manualList = ref<ModelItem[]>([{ pub: '', address: '' }]);
 watch(
   () => pubString.value,
   val => {
+    val = val.replace(/，/g, ',');
     const list = val.split(',').filter(v => v);
     const trimList = list.map(v => {
       const trimPub = v.replace(/\s/g, '');

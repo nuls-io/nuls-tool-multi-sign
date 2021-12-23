@@ -28,7 +28,8 @@ const cn = {
     createAddress3: '请输入签名地址公钥',
     createAddress4: '最少签名数量',
     createAddress5: '地址: ',
-    createAddress6: '已生成多签地址'
+    createAddress6: '已生成多签地址',
+    createAddress7: '无效的公钥'
   },
   createTx: {
     createTx1: '请选择多签地址',
