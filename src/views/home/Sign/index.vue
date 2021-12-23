@@ -152,7 +152,9 @@ async function deSerialize(hex: string) {
       symbol = 'NULS';
       newAmount = divisionDecimals(amount, 8);
     } else {
-      const res = await getNERVEAssets(props.address, true);
+      const currentAccount = getCurrentAccount(props.address);
+      const NerveAddress = currentAccount.address.NERVE;
+      const res = await getNERVEAssets(NerveAddress, true);
       const assetInfo = res.find(
         v => v.chainId === assetsChainId && v.assetId === assetsId
       ) as AssetItem;
