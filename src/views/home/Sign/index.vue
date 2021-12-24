@@ -211,6 +211,8 @@ async function submit() {
       } else {
         ElMessage.error(t('tip.tip13'));
       }
+    } else {
+      signHex.value = hex;
     }
   } catch (e) {
     ElMessage.error(e.message || e);

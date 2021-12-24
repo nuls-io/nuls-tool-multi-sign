@@ -205,6 +205,7 @@ const { lang, switchLang } = useLang();
 
         .right {
           min-width: 50px;
+          padding: 0 5px;
           height: 25px;
           line-height: 23px;
           color: #f35757;

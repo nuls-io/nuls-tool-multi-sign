@@ -2,7 +2,7 @@
   <div class="create-address-wrapper">
     <el-input
       v-model="pubString"
-      :rows="3"
+      :rows="4"
       type="textarea"
       :placeholder="$t('createAddress.createAddress1')"
     />
