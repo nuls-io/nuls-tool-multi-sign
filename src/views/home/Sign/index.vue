@@ -45,7 +45,7 @@
             <span>{{ restCount }}</span>
           </p>
         </div>
-        <div class="tip" v-if="restCount === 1 && !disableBtn">
+        <div class="tip" v-if="restCount <= 1 && !disableBtn">
           {{ $t('sign.sign11') }}
         </div>
 
@@ -70,7 +70,7 @@ import { useI18n } from 'vue-i18n';
 import Button from '@/components/Button/index.vue';
 import CopyWrapper from '@/components/CopyWrapper/index.vue';
 import { NTransfer } from '@/utils/api';
-import { broadcastTx, getNERVEAssets } from '@/service/api';
+import { broadcastTx, getNERVEAssets, getTxInfo } from '@/service/api';
 import {
   superLong,
   getCurrentAccount,
@@ -115,16 +115,21 @@ const signInfo = ref<SignInfo>({} as SignInfo);
 
 // 仍需签名数
 const restCount = computed(() => {
-  return signInfo.value.minSignCount - signInfo.value.signedCount;
+  return signInfo.value.minSignCount - signInfo.value.signedCount > 0
+    ? signInfo.value.minSignCount - signInfo.value.signedCount
+    : 0;
 });
 
 // 验证是否能签名
 const disableBtn = computed(() => {
-  const { signedInfo, pubkeyArray } = signInfo.value;
+  const { signedInfo, pubkeyArray, existed } = signInfo.value;
   // console.log(signInfo.value, props.pub)
+  if (!pubkeyArray) return false;
   const hasAuthToSign = pubkeyArray.find(v => v === props.pub);
   const alreadySigned = signedInfo.find(v => v.pub === props.pub);
-  if (!hasAuthToSign) {
+  if (existed) {
+    return t('error.lg_1003');
+  } else if (!hasAuthToSign) {
     return t('sign.sign14');
   } else if (alreadySigned) {
     return t('sign.sign13');
@@ -142,8 +147,7 @@ async function deSerialize(hex: string) {
     chain: props.chain
   });
   try {
-    const { coinData, type } = transfer.deSerialize(hex);
-    console.log(coinData, 'coinData');
+    const { coinData, type, hash } = transfer.deSerialize(hex);
     const { fromList, toList } = coinData;
     const { assetsChainId, assetsId, amount } = toList[0];
     const { chainId } = config[props.chain];
@@ -171,11 +175,13 @@ async function deSerialize(hex: string) {
     };
     const signedCount = transfer.getSignedCount(hex);
     const { minSignCount, signedInfo, pubkeyArray } = signedCount;
+    const existedTx = await getTxInfo(props.chain, hash);
     signInfo.value = {
       minSignCount,
       signedCount: signedInfo.length,
       signedInfo: signedInfo,
-      pubkeyArray
+      pubkeyArray,
+      existed: !!existedTx.result
     };
     console.log(signInfo.value, 'signInfo');
     errorMsg.value = '';
@@ -203,13 +209,13 @@ async function submit() {
       currentAccount.address.Ethereum,
       currentAccount.pub
     );
-    if (restCount.value === 1) {
+    if (restCount.value <= 1) {
       const res = await broadcastTx(props.chain, hex);
-      if (res && res.hash) {
+      if (res.result) {
         ElMessage.success(t('tip.tip10'));
         signHex.value = hex;
       } else {
-        ElMessage.error(t('tip.tip13'));
+        ElMessage.error(t('error.' + res.error?.code));
       }
     } else {
       signHex.value = hex;
@@ -270,6 +276,7 @@ defineExpose({
   .tip {
     color: #f4bd64;
     margin-top: -10px;
+    margin-bottom: 10px;
   }
 
   .sign-hex {

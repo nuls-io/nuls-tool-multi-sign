@@ -92,6 +92,22 @@ const en = {
     type24: 'Verifier Change',
     type25: 'Verifier initialization',
     type26: 'Token cross chain transfer'
+  },
+  error: {
+    lg_0001: 'Parameter error',
+    lg_0002: 'Chain initialization exception',
+    lg_1001: 'orphan transaction',
+    lg_1002: 'Double spend',
+    lg_1003: 'The transaction already exists',
+    lg_1004: 'Balance not enough',
+    lg_1005: 'TX amount from sending  is less than receiving.',
+    lg_1010: 'Failed',
+    lg_1011: 'Asset deciaml set error',
+    lg_1012: 'Asset symbol error',
+    lg_1013: 'Asset name error',
+    lg_1014: 'Address error',
+    lg_1015: 'TX signature error',
+    lg_1016: 'TX RPC error'
   }
 };
 

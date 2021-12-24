@@ -88,6 +88,7 @@ export default function useEthereum() {
       state.address = '';
       state.pub = '';
     }
+    // console.log(state, 111)
   }
 
   // 监听插件账户变动
@@ -95,7 +96,6 @@ export default function useEthereum() {
     const provider = getProvider();
     provider?.on('accountsChanged', (accounts: string) => {
       // console.log(accounts, '=======accountsChanged');
-      reload();
       initProvider(false);
       if (!accounts.length) {
         disconnect();
@@ -110,16 +110,11 @@ export default function useEthereum() {
     storage.set('providerType', providerType);
     state.providerType = providerType;
     initProvider();
-    reload();
   }
 
   function disconnect() {
     storage.remove('providerType');
     state.providerType = '';
-  }
-
-  function reload() {
-    // window.location.reload();
   }
 
   async function addEthereumChain(params: AddChain) {

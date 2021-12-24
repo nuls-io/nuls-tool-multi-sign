@@ -1,6 +1,10 @@
 export interface RpcRes<T> {
   code: number;
-  result: T;
+  result?: T;
+  error?: ErrorInfo;
+}
+interface ErrorInfo {
+  code: string;
 }
 export interface AssetItem {
   totalBalance: number;

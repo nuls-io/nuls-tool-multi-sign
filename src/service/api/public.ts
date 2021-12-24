@@ -106,13 +106,22 @@ export async function getCrossAssets(address: string): Promise<AssetItem[]> {
   return res;
 }
 
+export async function getTxInfo(chain: string, hash: string) {
+  const chainInfo = config[chain];
+  const params = createRPCParams('getTx', [chainInfo.chainId, hash]);
+  return await http.post<RpcRes<BroadCast>>({
+    url: chainInfo.apiUrl,
+    data: params
+  });
+}
+
 // 广播交易
 export async function broadcastTx(chain: string, txHex: string) {
   const chainInfo = config[chain];
   const params = createRPCParams('broadcastTx', [chainInfo.chainId, txHex]);
-  const result = await http.post<RpcRes<BroadCast>>({
+  return await http.post<RpcRes<BroadCast>>({
     url: chainInfo.apiUrl,
     data: params
   });
-  return result.result || {};
+  // return result.result || result.error;
 }

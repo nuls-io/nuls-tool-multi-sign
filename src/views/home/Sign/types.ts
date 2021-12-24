@@ -15,4 +15,5 @@ export interface SignInfo {
   signedCount: number;
   signedInfo: SignedInfo[];
   pubkeyArray: string[];
+  existed: boolean;
 }
