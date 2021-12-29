@@ -46,7 +46,8 @@ const en = {
     public2: 'Copied to clipboard',
     public3: 'Public Key',
     public4: 'Disconnect',
-    public5: 'View in browser'
+    public5: 'View in browser',
+    public6: 'How to use?'
   },
   tip: {
     tip1: 'Please enter the minimum number of signatures',

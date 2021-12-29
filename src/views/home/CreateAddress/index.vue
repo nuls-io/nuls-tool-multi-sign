@@ -53,6 +53,11 @@
 </template>
 
 <script lang="ts" setup>
+/*pubKeyArray = [
+  "02362c64e15ab653132ec753e4a8c181ef720ec927466a09417a07877824781f57",
+  "0224d86a584324fc8e92c6dba19c08926a7af77df884deec0d1c3b879a8f50720f",
+  "02962c7942851fa2c937be788a18693885276e3d9688b5997d9f02ebf2fef218db"
+]*/
 import { computed, ref, watch } from 'vue';
 import Button from '@/components/Button/index.vue';
 import CopyWrapper from '@/components/CopyWrapper/index.vue';

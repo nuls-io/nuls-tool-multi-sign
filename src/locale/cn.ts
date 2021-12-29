@@ -46,7 +46,8 @@ const cn = {
     public2: '已复制到剪切板',
     public3: '公钥',
     public4: '断开',
-    public5: '浏览器中查看'
+    public5: '浏览器中查看',
+    public6: '如何使用？'
   },
   tip: {
     tip1: '请输入最少签名数量',

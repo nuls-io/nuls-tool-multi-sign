@@ -15,11 +15,16 @@
       @connect="connectWallet"
       @createAccount="createAccount"
     />
+    <div class="how-to-use">
+      <a :href="guideLink" class="theme-text" target="_blank">
+        {{ $t('public.public6') }}
+      </a>
+    </div>
   </el-config-provider>
 </template>
 
 <script lang="ts" setup>
-import { onMounted } from 'vue';
+import { computed, onMounted } from 'vue';
 import Header from '@/components/Header/index.vue';
 import Home from './views/home/index.vue';
 import useEthereum from '@/hooks/useEthereum';
@@ -42,7 +47,14 @@ const {
   disconnect
 } = useEthereum();
 
-const { localeLang } = useLang();
+const { lang, localeLang } = useLang();
+
+const guideLink = computed(() => {
+  const cnLink =
+    'https://docs.nuls.io/zh/Guide/g_multiSignature_dapp_Guide.html';
+  const enLink = 'https://docs.nuls.io/Guide/g_multiSignature_dapp_Guide.html';
+  return lang.value === 'CN' ? enLink : cnLink;
+});
 
 onMounted(() => {
   initProvider();
@@ -103,15 +115,28 @@ async function createAccount() {
 #app {
   background-color: #ffffff;
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   position: relative;
   box-shadow: 0 3px 29px 0 rgb(178 199 217 / 29%);
+  display: flex;
+  flex-direction: column;
   @media screen and (min-width: 1200px) {
     width: 400px;
     height: 780px;
     margin: 0 auto;
     overflow: auto;
-    padding-bottom: 30px;
+    min-height: auto;
+    //padding-bottom: 30px;
+  }
+  .header-bar {
+    flex-shrink: 0;
+  }
+  .main-wrapper {
+    flex: 1;
+  }
+  .how-to-use {
+    padding: 20px 0 10px;
+    text-align: center;
   }
 }
 </style>
