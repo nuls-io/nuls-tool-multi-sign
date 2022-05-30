@@ -9,6 +9,7 @@
       @click="selectAddress(item)"
     >
       {{ superLong(item.address, 10) }}
+      <img src="../../../assets/img/copy.svg" alt="" @click.stop="copy(item.address)" />
     </div>
     <div class="add-address theme-text" @click="addAddress">
       {{ $t('createTx.createTx7') }}
@@ -18,6 +19,7 @@
 
 <script lang="ts" setup>
 import { superLong } from '@/utils/util';
+import useCopy from '@/hooks/useCopy';
 
 const props = defineProps({
   show: Boolean,
@@ -25,6 +27,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:show', 'selectAddress', 'addAddress']);
+
+const { copy } = useCopy();
 
 function hoverEnter(e: Event) {
   const target = e.target as HTMLElement;
@@ -70,6 +74,12 @@ function addAddress() {
   .address-item {
     border-bottom: 1px solid #e9ebf4;
     margin-left: 20px;
+    display: flex;
+    justify-content: space-between;
+    padding-right: 20px;
+    img {
+      width: 16px;
+    }
   }
 
   .add-address {
