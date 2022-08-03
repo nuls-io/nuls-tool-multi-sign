@@ -1,10 +1,11 @@
-export interface RpcRes<T> {
+export interface RpcRes<T = any> {
   code: number;
   result?: T;
   error?: ErrorInfo;
 }
 interface ErrorInfo {
   code: string;
+  message: string;
 }
 export interface AssetItem {
   totalBalance: number;
@@ -16,6 +17,12 @@ export interface AssetItem {
   assetId: number;
   symbol: string;
   balance: string;
+  contractAddress?: string;
+}
+
+export interface NRC20Asset extends AssetItem {
+  tokenSymbol: string;
+  key: string;
 }
 
 export interface NULSInfo {

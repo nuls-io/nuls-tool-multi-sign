@@ -1,5 +1,5 @@
 <template>
-  <div class="create-tx-wrapper">
+  <div class="create-tx-wrapper" v-loading="loading">
     <el-form ref="createTxForm" :model="formModel" :rules="rules">
       <div ref="fromAddress" class="from-address-item">
         <div class="from-address-content" @click="showAddressSelect = true">
@@ -61,7 +61,7 @@
 <script lang="ts" setup>
 import { reactive, ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ElForm } from 'element-plus';
+import { ElForm, ElMessage } from 'element-plus';
 import AddressSelect from './AddressSelect.vue';
 import Button from '@/components/Button/index.vue';
 import CopyWrapper from '@/components/CopyWrapper/index.vue';
@@ -70,7 +70,8 @@ import storage from '@/utils/storage';
 import { getNERVEAssets, getNULSAssets } from '@/service/api';
 import nerve from 'nerve-sdk-js';
 import { NTransfer } from '@/utils/api';
-import { timesDecimals, superLong } from '@/utils/util';
+import { timesDecimals, superLong, Times, Plus } from '@/utils/util';
+import { getContractCallData } from '@/utils/nulsContractValidate';
 import config from '@/config';
 
 import type { ValidAddressInfo } from './types';
@@ -241,37 +242,69 @@ function max() {
   formModel.amount = chooseAsset.value.available;
 }
 
+const loading = ref(false);
 const txHex = ref('');
 function submit() {
   createTxForm.value?.validate(async valid => {
     if (valid) {
-      const { from, to, amount } = formModel;
-      const { chainId, assetId, decimals } = chooseAsset.value;
-      const transferInfo = {
-        from,
-        to,
-        assetsChainId: chainId,
-        assetsId: assetId,
-        amount: timesDecimals(amount, decimals),
-        fee: 0
-      };
-      const transfer = new NTransfer({
-        chain: props.chain as string
-      });
-      if (props.chain === 'NULS') {
-        transferInfo.fee = 100000;
+      try {
+        loading.value = true;
+        const { from, to, amount } = formModel;
+        const { chainId, assetId, decimals, contractAddress } = chooseAsset.value;
+        let type = 2, inputOutput: any, txData: any = {};
+        const transfer = new NTransfer({
+          chain: props.chain as string
+        });
+        if (contractAddress) {
+          // nuls 转账token资产
+          type = 16;
+          const contractCallDataRes = await getContractCallData(from, to, 25, contractAddress, 'transfer', amount, decimals);
+          if (!contractCallDataRes.success) {
+            throw contractCallDataRes.msg;
+          }
+          txData = contractCallDataRes.data!;
+          const transferInfo = {
+            from,
+            assetsChainId: config.NULS.chainId,
+            assetsId: config.NULS.assetId,
+            amount: Times(txData.gasLimit, txData.price).toFixed(), // 调用合约手续费
+            toContractValue: 0,
+            to: contractAddress
+          };
+          inputOutput = await transfer.callContractTransaction(transferInfo);
+        } else {
+          const transferInfo = {
+            from,
+            to,
+            assetsChainId: chainId,
+            assetsId: assetId,
+            amount: timesDecimals(amount, decimals),
+            fee: 0
+          };
+          if (props.chain === 'NULS') {
+            transferInfo.fee = 100000;
+          }
+          inputOutput = await transfer.transferTransaction(transferInfo);
+        }
+        const { inputs, outputs } = inputOutput;
+        const tAssemble = transfer.sdk.transactionAssemble(inputs, outputs, '', type, txData);
+        const multiInfo = addressList.value.find(
+          v => v.address === from
+        ) as MultiAddress;
+        txHex.value = transfer.createMultiTransaction(
+          tAssemble,
+          multiInfo.minSignCount,
+          multiInfo.pubList
+        );
+        console.log(txHex.value, 465798);
+      } catch (e) {
+        console.log(e);
+        ElMessage.error({
+          message: e,
+          duration: 2000
+        });
       }
-      const inputOutput = await transfer.transferTransaction(transferInfo);
-      const multiInfo = addressList.value.find(
-        v => v.address === from
-      ) as MultiAddress;
-      txHex.value = transfer.createMultiTransaction(
-        inputOutput.inputs,
-        inputOutput.outputs,
-        multiInfo.minSignCount,
-        multiInfo.pubList
-      );
-      console.log(txHex.value, 465798);
+      loading.value = false;
     }
   });
 }

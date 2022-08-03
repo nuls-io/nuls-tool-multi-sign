@@ -70,7 +70,7 @@ import { useI18n } from 'vue-i18n';
 import Button from '@/components/Button/index.vue';
 import CopyWrapper from '@/components/CopyWrapper/index.vue';
 import { NTransfer } from '@/utils/api';
-import { broadcastTx, getNERVEAssets, getTxInfo } from '@/service/api';
+import { broadcastTx, getNERVEAssets, getTxInfo, getContract } from '@/service/api';
 import {
   superLong,
   getCurrentAccount,
@@ -147,28 +147,40 @@ async function deSerialize(hex: string) {
     chain: props.chain
   });
   try {
-    const { coinData, type, hash } = transfer.deSerialize(hex);
+    const { coinData, type, hash, txData } = transfer.deSerialize(hex);
+    console.log(coinData, type, hash, '==--==', txData);
     const { fromList, toList } = coinData;
-    const { assetsChainId, assetsId, amount } = toList[0];
     const { chainId } = config[props.chain];
-    let symbol, newAmount;
-    if (props.chain === 'NULS' && assetsChainId === chainId) {
-      symbol = 'NULS';
-      newAmount = divisionDecimals(amount, 8);
+    let symbol, newAmount, to;
+    const from = fromList[0].address;
+    if (txData) {
+      // nuls链token转账
+      const contractInfo = await getContract(txData.contractAddress);
+      if (!contractInfo.result) throw contractInfo.error?.message;
+      const txAmount = txData.args[1][0];
+      symbol = contractInfo.result.symbol;
+      newAmount = divisionDecimals(txAmount, contractInfo.result.decimals);
+      to = txData.args[0][0];
     } else {
-      const currentAccount = getCurrentAccount(props.address);
-      const NerveAddress = currentAccount.address.NERVE;
-      const res = await getNERVEAssets(NerveAddress, true);
-      const assetInfo = res.find(
-        v => v.chainId === assetsChainId && v.assetId === assetsId
-      ) as AssetItem;
-      symbol = assetInfo.symbol;
-      newAmount = divisionDecimals(amount, assetInfo.decimals);
+      const { assetsChainId, assetsId, amount } = toList[0];
+      if (props.chain === 'NULS' && assetsChainId === chainId) {
+        symbol = 'NULS';
+        newAmount = divisionDecimals(amount, 8);
+      } else {
+        const currentAccount = getCurrentAccount(props.address);
+        const NerveAddress = currentAccount.address.NERVE;
+        const res = await getNERVEAssets(NerveAddress, true);
+        const assetInfo = res.find(
+          v => v.chainId === assetsChainId && v.assetId === assetsId
+        ) as AssetItem;
+        symbol = assetInfo.symbol;
+        newAmount = divisionDecimals(amount, assetInfo.decimals);
+      }
+      to = toList[0].address;
     }
-
     txInfo.value = {
-      from: fromList[0].address,
-      to: toList[0].address,
+      from,
+      to,
       amount: newAmount,
       symbol,
       type

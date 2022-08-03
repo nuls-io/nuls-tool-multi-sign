@@ -1,5 +1,6 @@
 import nerve from 'nerve-sdk-js';
-import { Minus, Plus } from './util';
+import nuls from 'nuls-sdk-js';
+import { Minus, Plus, timesDecimals } from './util';
 // @ts-ignore
 import Signature from 'elliptic/lib/elliptic/ec/signature';
 // @ts-ignore
@@ -16,6 +17,7 @@ import Serializers from 'nerve-sdk-js/lib/api/serializers';
 import sdk from 'nerve-sdk-js/lib/api/sdk';
 const multi = require('nerve-sdk-js/lib/model/mutilsigntxsignatures');
 const CoinData = require('nerve-sdk-js/lib/model/coindata');
+const ContractData = require('nuls-sdk-js/lib/model/contractdata');
 
 import { getAssetBalance } from '@/service/api';
 
@@ -40,7 +42,7 @@ export class NTransfer {
     this.chain = props.chain; //链网络
     this.chainInfo = config[props.chain];
     this.type = props.type; //交易类型
-    this.sdk = nerve;
+    this.sdk = props.chain === 'NULS' ? nuls : nerve;
     this.provider = getProvider();
   }
 
@@ -158,12 +160,10 @@ export class NTransfer {
 
   // 创建多签交易, 只支持跨链资产和主资产
   createMultiTransaction(
-    inputs: any,
-    outputs: any,
+    tAssemble: any,
     minSignCount: number,
     pubKeyArray: string[]
   ) {
-    const tAssemble = this.sdk.transactionAssemble(inputs, outputs, '', 2, {});
     const pubKeyBufferArray = [];
     for (let pub of pubKeyArray) {
       pubKeyBufferArray.push(Buffer.from(pub, 'hex'));
@@ -247,10 +247,15 @@ export class NTransfer {
         });
       }
     }
+    let txData: any = null;
+    if (tx.type === 16) {
+      txData = new ContractData(new BufferReader(tx.txData, 0));
+    }
     return {
       type: tx.type,
       coinData,
-      hash
+      hash,
+      txData
     };
   }
 
@@ -277,6 +282,7 @@ export class NTransfer {
       //跨链交易
     } else if (this.type === 16) {
       //调用合约
+      return this.callContractTransaction(data);
     } else if (this.type === 43) {
       // nerve 网络提现到eth bsc
       return this.WithdrawalTransaction(data);
@@ -290,7 +296,6 @@ export class NTransfer {
       outputs = [];
     //转账资产nonce
     const nonce: any = await this.getNonce(from, assetsChainId, assetsId);
-    if (!nonce) throw '获取nonce值失败';
     const { chainId, assetId } = this.chainInfo;
     if (chainId === assetsChainId && assetId === assetsId) {
       // 转账资产为本链主资产, 将手续费和转账金额合成一个input
@@ -329,6 +334,65 @@ export class NTransfer {
       amount,
       lockTime: 0
     });
+    return { inputs, outputs };
+  }
+
+  // nuls 调用合约
+  async callContractTransaction(transferInfo: any) {
+    const { from, assetsChainId, assetsId } = transferInfo;
+    const nonce = await this.getNonce(from, assetsChainId, assetsId);
+    const defaultFee = timesDecimals(0.001, 8); // 交易打包手续费
+    const inputs = [
+      {
+        address: transferInfo.from,
+        assetsChainId: transferInfo.assetsChainId,
+        assetsId: transferInfo.assetsId,
+        amount: Plus(transferInfo.amount, defaultFee).toFixed(),
+        locked: 0,
+        nonce: nonce
+      }
+    ];
+    const outputs = [];
+    if (transferInfo.toContractValue) {
+      // 向合约地址转nuls
+      outputs.push({
+        address: transferInfo.to,
+        assetsChainId: transferInfo.assetsChainId,
+        assetsId: transferInfo.assetsId,
+        amount: transferInfo.toContractValue,
+        lockTime: 0
+      });
+    }
+
+    const multyAssets = transferInfo.multyAssets;
+    if (multyAssets && multyAssets.length) {
+      // 向合约地址转平行链资产
+      let length = multyAssets.length;
+      for (let i = 0; i < length; i++) {
+        let multyAsset = multyAssets[i];
+        const nonce = await this.getNonce(
+          from,
+          multyAsset.assetChainId,
+          multyAsset.assetId
+        );
+
+        inputs.push({
+          address: transferInfo.from,
+          assetsChainId: multyAsset.assetChainId,
+          assetsId: multyAsset.assetId,
+          amount: multyAsset.value,
+          locked: 0,
+          nonce: nonce
+        });
+        outputs.push({
+          address: transferInfo.to,
+          assetsChainId: multyAsset.assetChainId,
+          assetsId: multyAsset.assetId,
+          amount: multyAsset.value,
+          lockTime: 0
+        });
+      }
+    }
     return { inputs, outputs };
   }
 
@@ -415,7 +479,10 @@ export class NTransfer {
       assetsChainId,
       assetsId
     );
-    return res ? res.nonce : null;
+    if (res.nonce) {
+      return res.nonce;
+    }
+    throw 'Get nonce error: ' + res.message;
   }
 
   async broadcastHex(txHex: string) {

@@ -47,6 +47,7 @@ module.exports = {
         resolvers: [ElementPlusResolver()]
       })
     );
+    config.optimization.minimizer[0].options.terserOptions.compress.drop_console = true;
     // config.plugins.push(new BundleAnalyzerPlugin());
   },
 

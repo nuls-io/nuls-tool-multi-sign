@@ -18,3 +18,4 @@ declare module "*.scss";
 
 declare module "lodash";
 declare module "nerve-sdk-js"
+declare module "nuls-sdk-js"
