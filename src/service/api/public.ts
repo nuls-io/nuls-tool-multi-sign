@@ -2,7 +2,13 @@ import { divisionAndFix, genId, Plus, Times } from '@/utils/util';
 import config from '@/config';
 import http from '@/service';
 
-import type { RpcRes, AssetItem, NULSInfo, BroadCast, NRC20Asset } from './types';
+import type {
+  RpcRes,
+  AssetItem,
+  NULSInfo,
+  BroadCast,
+  NRC20Asset
+} from './types';
 
 function createRPCParams(method: string, data: any): any {
   return {
@@ -16,7 +22,7 @@ function createRPCParams(method: string, data: any): any {
 // 查询nerve链上资产列表
 export async function getNERVEAssets(address: string, all = false) {
   const chainInfo = config.NERVE;
-  const params = createRPCParams('getAccountLedgerList', [
+  const params = createRPCParams('getAccountLedgerListV2', [
     chainInfo.chainId,
     address
   ]);
@@ -30,7 +36,9 @@ export async function getNERVEAssets(address: string, all = false) {
       return [...result.result];
     }
     result.result.map(v => {
-      if (v.totalBalance) {
+      v.assetKey = v.chainId + '-' + v.assetId;
+      v.balanceStr = v.balance;
+      if (v.balanceStr && v.balanceStr !== '0') {
         v.available = divisionAndFix(v.balanceStr, v.decimals, v.decimals);
         assetList.push(v);
       }
@@ -166,7 +174,11 @@ export async function validateContractCall(
     multyAssetArray = new Array(length);
     for (let i = 0; i < length; i++) {
       let multyAsset = multyAssets[i];
-      multyAssetArray[i] = [multyAsset.value, multyAsset.assetChainId, multyAsset.assetId];
+      multyAssetArray[i] = [
+        multyAsset.value,
+        multyAsset.assetChainId,
+        multyAsset.assetId
+      ];
     }
   }
   const chainInfo = config.NULS;
