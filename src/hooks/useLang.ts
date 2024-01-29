@@ -8,17 +8,17 @@ export default function useLang() {
   const { locale } = useI18n();
   // 切换的语言
   const lang = computed(() => {
-    return locale.value === 'en' ? 'CN' : 'EN';
+    return locale.value === 'en' ? 'Zh' : 'En';
   });
 
   function switchLang() {
-    locale.value = lang.value === 'EN' ? 'en' : 'zh-cn';
+    locale.value = lang.value === 'En' ? 'en' : 'zh-cn';
     storage.set('lang', locale.value);
   }
 
   // element-plus国际化
   const localeLang = computed(() => {
-    return lang.value === 'EN' ? zhCn : enLocale;
+    return lang.value === 'En' ? zhCn : enLocale;
   });
   return {
     lang,

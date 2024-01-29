@@ -24,7 +24,7 @@ const cn = {
   createAddress: {
     createAddress1:
       '粘贴多个公钥，每个公钥之间用逗号隔开，应用将自动将信息拆分并填写在下方',
-    createAddress2: '公钥列表 丨 已添加数量：',
+    createAddress2: '公钥列表',
     createAddress3: '请输入签名地址公钥',
     createAddress4: '最少签名数量',
     createAddress5: '地址: ',
@@ -47,7 +47,8 @@ const cn = {
     public3: '公钥',
     public4: '断开',
     public5: '浏览器中查看',
-    public6: '如何使用？'
+    public6: '如何使用？',
+    public7: '连接钱包'
   },
   tip: {
     tip1: '请输入最少签名数量',
@@ -75,14 +76,14 @@ const cn = {
     type7: '黄牌惩罚',
     type8: '红牌惩罚',
     type9: '注销节点',
-    type10: '跨链交易',
+    type10: '跨链转账',
     type11: '注册跨链',
     type12: '注销跨链',
     type13: '新增跨链资产',
     type14: '注销跨链资产',
-    type15: '创建合约',
-    type16: '调用合约',
-    type17: '删除合约',
+    type15: '合约部署',
+    type16: '合约调用',
+    type17: '合约删除',
     type18: '合约转账',
     type19: '合约返还',
     type20: '合约创建节点',
@@ -91,7 +92,7 @@ const cn = {
     type23: '合约注销节点',
     type24: '验证人变更',
     type25: '验证人初始化',
-    type26: 'token跨链转账'
+    type26: '合约Token跨链转账'
   },
   error: {
     lg_0001: '参数错误',

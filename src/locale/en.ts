@@ -1,8 +1,8 @@
 const en = {
   tab: {
     Sign: 'Sign',
-    CreateAddress: 'Create address',
-    CreateTx: 'Create transaction'
+    CreateAddress: 'Create Address',
+    CreateTx: 'Create Transaction'
   },
   sign: {
     sign1: 'Please fill in the HEX to be signed',
@@ -24,7 +24,7 @@ const en = {
   createAddress: {
     createAddress1:
       'Paste multiple public keys, separate each public key with a comma, the application will automatically split the information and fill in the following',
-    createAddress2: 'Public key list 丨added:',
+    createAddress2: 'Public Key List',
     createAddress3: 'Please enter the public key of the signature address',
     createAddress4: 'Minimum number of signatures',
     createAddress5: 'Address:',
@@ -38,16 +38,17 @@ const en = {
     createTx4: 'Please enter the transfer amount',
     createTx5: 'Please enter the receiving address',
     createTx6: 'Max',
-    createTx7: 'Add a multi-signature address',
+    createTx7: 'Add A Multi-Sign Address',
     createTx8: 'Trading HEX'
   },
   public: {
-    public1: 'Generate multi-chain address',
+    public1: 'Generate Multi-Chain Address',
     public2: 'Copied to clipboard',
     public3: 'Public Key',
     public4: 'Disconnect',
-    public5: 'View in browser',
-    public6: 'How to use?'
+    public5: 'View In Browser',
+    public6: 'How to use?',
+    public7: 'Connect Wallet'
   },
   tip: {
     tip1: 'Please enter the minimum number of signatures',
@@ -67,32 +68,32 @@ const en = {
   type: {
     undefined: '',
     type0: 'All',
-    type1: 'Consensus reward',
+    type1: 'Consensus Reward',
     type2: 'Transfer',
-    type3: 'Aliased',
-    type4: 'Register node',
+    type3: 'Register Alias',
+    type4: 'Register Node',
     type5: 'Stake',
-    type6: 'Cancel consensus',
-    type7: 'Yellow card',
-    type8: 'Red card',
-    type9: 'Unregister node',
-    type10: 'Cross Trading',
-    type11: 'Cross Register',
-    type12: 'Cross Cancellation',
-    type13: 'Add Cross Assets',
-    type14: 'Cancel Cross Assets',
-    type15: 'Contract creation',
-    type16: 'Call contract',
-    type17: 'Delete contract',
-    type18: 'Contract transfer',
-    type19: 'Contract return',
-    type20: 'Contract creation node',
+    type6: 'Unstake',
+    type7: 'Yellow Card',
+    type8: 'Red Card',
+    type9: 'Unregister Node',
+    type10: 'Cross Transfer',
+    type11: 'Register Cross-Chain',
+    type12: 'Unregister Cross-Chain',
+    type13: 'Register Cross-Chain Asset',
+    type14: 'Unregister Cross-Chain Asset',
+    type15: 'Contract Deploy',
+    type16: 'Contract Call',
+    type17: 'Contract Delete',
+    type18: 'Contract Transfer',
+    type19: 'Contract Return',
+    type20: 'Contract Register Node',
     type21: 'Contract Stake',
-    type22: 'Consensus contract consensus',
-    type23: 'Contract cancellation node',
-    type24: 'Verifier Change',
-    type25: 'Verifier initialization',
-    type26: 'Token cross chain transfer'
+    type22: 'Consensus Unstake',
+    type23: 'Contract Unregister Node',
+    type24: 'Validator Change',
+    type25: 'Validator Initialization',
+    type26: 'Contract Cross Transfer'
   },
   error: {
     lg_0001: 'Parameter error',

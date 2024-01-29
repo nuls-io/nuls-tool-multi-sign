@@ -7,7 +7,7 @@
       :placeholder="$t('createAddress.createAddress1')"
     />
     <div class="pub-list">
-      <h5>{{ $t('createAddress.createAddress2') }}{{ validList.length }}</h5>
+      <h5>{{ $t('createAddress.createAddress2') }}</h5>
       <PubItem
         v-model:pub="item.pub"
         v-for="(item, index) in pubList"

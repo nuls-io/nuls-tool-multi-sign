@@ -1,6 +1,6 @@
 <template>
   <div class="connect-wallet">
-    <span class="title">Connect wallet</span>
+    <span class="title">{{ $t('public.public7') }}</span>
     <div class="providers-wrap">
       <p
         v-for="item in providerList"
