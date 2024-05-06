@@ -205,30 +205,51 @@ export class NTransfer {
     return tAssemble.txSerialize().toString('hex');
   }
 
+  async signTx(
+    txHex: string,
+    signAddress: string,
+    pub: string,
+    isNULSLedger = false
+  ) {
+    if (isNULSLedger) {
+      return await window.nabox.signNULSTransaction({ txHex: txHex });
+    } else {
+      const tAssemble = nerve.deserializationTx(txHex);
+      const hash = '0x' + tAssemble.getHash().toString('hex');
+      const signature = await this.signHash(hash, signAddress);
+      tAssemble.signatures = nerve.appSplicingPub(signature, pub);
+      return tAssemble.txSerialize().toString('hex');
+    }
+  }
+
   // 查询多签已签名次数
   getSignedCount(txHex: string) {
-    const bufferReader = new BufferReader(Buffer.from(txHex, 'hex'), 0);
-    // 反序列回交易对象
-    const tx = new txs.Transaction();
-    tx.parse(bufferReader);
-    const sign = new multi.MultiTransactionSignatures(0, null);
-    const signReader = new BufferReader(tx.signatures, 0);
-    sign.parse(signReader);
-    const signedRes: any = [];
-    sign.signatures.map((v: any) => {
-      // console.log(v.pubkey, v.signData, 11)
-      const pub = v.pubkey.toString('hex');
-      const signData = v.signData.toString('hex');
-      signedRes.push({
-        pub,
-        signData
+    try {
+      const bufferReader = new BufferReader(Buffer.from(txHex, 'hex'), 0);
+      // 反序列回交易对象
+      const tx = new txs.Transaction();
+      tx.parse(bufferReader);
+      const sign = new multi.MultiTransactionSignatures(0, null);
+      const signReader = new BufferReader(tx.signatures, 0);
+      sign.parse(signReader);
+      const signedRes: any = [];
+      sign.signatures.map((v: any) => {
+        // console.log(v.pubkey, v.signData, 11)
+        const pub = v.pubkey.toString('hex');
+        const signData = v.signData.toString('hex');
+        signedRes.push({
+          pub,
+          signData
+        });
       });
-    });
-    return {
-      minSignCount: sign.m,
-      signedInfo: signedRes,
-      pubkeyArray: sign.pubkeyArray.map((v: any) => v.toString('hex'))
-    };
+      return {
+        minSignCount: sign.m,
+        signedInfo: signedRes,
+        pubkeyArray: sign.pubkeyArray.map((v: any) => v.toString('hex'))
+      };
+    } catch (e) {
+      return false;
+    }
   }
 
   //通过txHex反序列化交易得到coinData

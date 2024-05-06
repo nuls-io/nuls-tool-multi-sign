@@ -19,7 +19,8 @@ const en = {
       '*This signature is the last signature of this multi-signature transaction.The transaction will be broadcast to the network after the signature is completed, ',
     sign12: 'Signed HEX',
     sign13: 'Signed',
-    sign14: 'The current account has no signature permission'
+    sign14: 'The current account has no signature permission',
+    sign15: 'Sign And Broadcast'
   },
   createAddress: {
     createAddress1:

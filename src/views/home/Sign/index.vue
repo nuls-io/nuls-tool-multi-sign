@@ -34,28 +34,41 @@
             </span>
           </p>
         </div>
-        <div class="sign-info">
-          <h5>{{ $t('sign.sign8') }}</h5>
-          <p>
-            <span class="label-text">{{ $t('sign.sign9') }}</span>
-            <span>{{ signInfo.signedCount }}</span>
-          </p>
-          <p>
-            <span class="label-text">{{ $t('sign.sign10') }}</span>
-            <span>{{ restCount }}</span>
-          </p>
+        <template v-if="!generalTx">
+          <div class="sign-info">
+            <h5>{{ $t('sign.sign8') }}</h5>
+            <p>
+              <span class="label-text">{{ $t('sign.sign9') }}</span>
+              <span>{{ signInfo.signedCount }}</span>
+            </p>
+            <p>
+              <span class="label-text">{{ $t('sign.sign10') }}</span>
+              <span>{{ restCount }}</span>
+            </p>
+          </div>
+          <div class="tip" v-if="restCount <= 1 && !disableBtn">
+            {{ $t('sign.sign11') }}
+          </div>
+          <Button
+            v-if="!signHex"
+            :title="disableBtn ? disableBtn : $t('tab.Sign')"
+            :disabled="!!disableBtn"
+            @click="submit"
+          ></Button>
+        </template>
+        <template v-else>
+          <Button
+            v-if="!signHex"
+            :title="disableSign ? $t('sign.sign14') : $t('sign.sign15')"
+            :disabled="disableSign"
+            @click="signAndBroadcast"
+          ></Button>
+        </template>
+        <div class="sign-hex hash-wrapper" v-if="txHash">
+          <h5>Hash:</h5>
+          <CopyWrapper :content="txHash" layout="column" :omit="false" />
         </div>
-        <div class="tip" v-if="restCount <= 1 && !disableBtn">
-          {{ $t('sign.sign11') }}
-        </div>
-
-        <Button
-          v-if="!signHex"
-          :title="disableBtn ? disableBtn : $t('tab.Sign')"
-          :disabled="!!disableBtn"
-          @click="submit"
-        ></Button>
-        <div class="sign-hex" v-else>
+        <div class="sign-hex" v-if="signHex">
           <h5>{{ $t('sign.sign12') }}</h5>
           <CopyWrapper :content="signHex" layout="column" :omit="false" />
         </div>
@@ -80,6 +93,7 @@ import {
 } from '@/utils/util';
 import config from '@/config';
 import { ElMessage } from 'element-plus';
+import { getProvider } from '@/hooks/useEthereum';
 
 import type { TxInfo, SignInfo } from './types';
 import { AssetItem } from '@/service/api/types';
@@ -93,10 +107,13 @@ const props = defineProps<{
 }>();
 
 const txHex = ref('');
+const generalTx = ref(false);
+const txHash = ref('');
 watch(
   () => txHex.value,
   val => {
     signHex.value = '';
+    txHash.value = '';
     if (val) {
       debounce(() => deSerialize(val), 500)();
     } else {
@@ -138,6 +155,15 @@ const disableBtn = computed(() => {
   }
 });
 
+// disable sign and broadcast
+const disableSign = computed(() => {
+  const from = txInfo.value.from;
+  if (!from) return false;
+  const currentAccount = getCurrentAccount(props.address);
+  const hasAuth = Object.values(currentAccount.address).find(v => v === from);
+  return !hasAuth;
+});
+
 const loading = ref(false);
 
 // 根据txHex反序列化交易
@@ -148,7 +174,7 @@ async function deSerialize(hex: string) {
   });
   try {
     const { coinData, type, hash, txData } = transfer.deSerialize(hex);
-    console.log(coinData, type, hash, '==--==', txData);
+    // console.log(coinData, type, hash, '==--==', txData);
     const { fromList, toList } = coinData;
     const { chainId } = config[props.chain];
     let symbol, newAmount, to;
@@ -186,18 +212,24 @@ async function deSerialize(hex: string) {
       type
     };
     const signedCount = transfer.getSignedCount(hex);
-    const { minSignCount, signedInfo, pubkeyArray } = signedCount;
-    const existedTx = await getTxInfo(props.chain, hash);
-    signInfo.value = {
-      minSignCount,
-      signedCount: signedInfo.length,
-      signedInfo: signedInfo,
-      pubkeyArray,
-      existed: !!existedTx.result
-    };
-    console.log(signInfo.value, 'signInfo');
+    if (signedCount) {
+      generalTx.value = false;
+      const { minSignCount, signedInfo, pubkeyArray } = signedCount;
+      const existedTx = await getTxInfo(props.chain, hash);
+      signInfo.value = {
+        minSignCount,
+        signedCount: signedInfo.length,
+        signedInfo: signedInfo,
+        pubkeyArray,
+        existed: !!existedTx.result
+      };
+    } else {
+      generalTx.value = true;
+    }
+    // console.log(signInfo.value, 'signInfo');
     errorMsg.value = '';
   } catch (e) {
+    // console.log(e,33)
     txInfo.value = {} as TxInfo;
     signInfo.value = {} as SignInfo;
     errorMsg.value = t('tip.tip9');
@@ -226,11 +258,41 @@ async function submit() {
       if (res.result) {
         ElMessage.success(t('tip.tip10'));
         signHex.value = hex;
+        txHash.value = res.result.hash;
       } else {
         ElMessage.error(t('error.' + res.error?.code));
       }
     } else {
       signHex.value = hex;
+    }
+  } catch (e) {
+    ElMessage.error(e.message || e);
+  }
+  loading.value = false;
+}
+
+async function signAndBroadcast() {
+  loading.value = true;
+  try {
+    const currentAccount = getCurrentAccount(props.address);
+    const transfer = new NTransfer({
+      chain: props.chain
+    });
+    const provider = getProvider();
+    const isNULSLedger = provider?.isNabox && provider?.isNULSLedger;
+    const hex = await transfer.signTx(
+      txHex.value,
+      currentAccount.address.Ethereum,
+      currentAccount.pub,
+      isNULSLedger
+    );
+    const res = await broadcastTx(props.chain, hex);
+    if (res.result) {
+      ElMessage.success(t('tip.tip10'));
+      signHex.value = hex;
+      txHash.value = res.result.hash;
+    } else {
+      ElMessage.error(t('error.' + res.error?.code));
     }
   } catch (e) {
     ElMessage.error(e.message || e);
@@ -289,6 +351,12 @@ defineExpose({
     color: #f4bd64;
     margin-top: -10px;
     margin-bottom: 10px;
+  }
+
+  .hash-wrapper {
+    .content {
+      min-height: 40px;
+    }
   }
 
   .sign-hex {

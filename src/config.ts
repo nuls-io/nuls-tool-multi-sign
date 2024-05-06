@@ -12,7 +12,7 @@ const config = {
       assetId: 1,
       prefix: 'TNVT',
       symbol: 'NVT',
-      apiUrl: 'http://beta.public.nerve.network',
+      apiUrl: 'https://beta.public.nerve.network',
       exploreUrl: 'http://beta.scan.nerve.network'
     },
     NULS: {
@@ -20,8 +20,8 @@ const config = {
       assetId: 1,
       prefix: 'tNULS',
       symbol: 'NULS',
-      apiUrl: 'http://beta.public1.nuls.io',
-      exploreUrl: 'http://beta.nulscan.io'
+      apiUrl: 'https://beta.public1.nuls.io',
+      exploreUrl: 'https://beta.nulscan.io'
     },
     timeout
   },

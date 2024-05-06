@@ -19,7 +19,8 @@ const cn = {
       '*本次签名为该笔多签交易最后一次签名，完成签名后交易将被广播至网络中',
     sign12: '签名结果HEX',
     sign13: '已签名',
-    sign14: '当前账户无签名权限'
+    sign14: '当前账户无签名权限',
+    sign15: '签名并广播'
   },
   createAddress: {
     createAddress1:
