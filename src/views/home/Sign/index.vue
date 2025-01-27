@@ -183,10 +183,10 @@ async function deSerialize(hex: string) {
       // nuls链token转账
       const contractInfo = await getContract(txData.contractAddress);
       if (!contractInfo.result) throw contractInfo.error?.message;
-      const txAmount = txData.args[1][0];
+      const txAmount = txData.args[1] && txData.args[1][0] || '0';
       symbol = contractInfo.result.symbol;
       newAmount = divisionDecimals(txAmount, contractInfo.result.decimals);
-      to = txData.args[0][0];
+      to = txData.args[0][0] || '';
     } else {
       const { assetsChainId, assetsId, amount } = toList[0];
       if (props.chain === 'NULS' && assetsChainId === chainId) {
