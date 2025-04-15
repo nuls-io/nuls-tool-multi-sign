@@ -83,7 +83,12 @@ import { useI18n } from 'vue-i18n';
 import Button from '@/components/Button/index.vue';
 import CopyWrapper from '@/components/CopyWrapper/index.vue';
 import { NTransfer } from '@/utils/api';
-import { broadcastTx, getNERVEAssets, getTxInfo, getContract } from '@/service/api';
+import {
+  broadcastTx,
+  getNERVEAssets,
+  getTxInfo,
+  getContract
+} from '@/service/api';
 import {
   superLong,
   getCurrentAccount,
@@ -94,6 +99,7 @@ import {
 import config from '@/config';
 import { ElMessage } from 'element-plus';
 import { getProvider } from '@/hooks/useEthereum';
+import { NDecimals, NKey, NSymbol } from '@/constants/constants';
 
 import type { TxInfo, SignInfo } from './types';
 import { AssetItem } from '@/service/api/types';
@@ -176,22 +182,23 @@ async function deSerialize(hex: string) {
     const { coinData, type, hash, txData } = transfer.deSerialize(hex);
     // console.log(coinData, type, hash, '==--==', txData);
     const { fromList, toList } = coinData;
-    const { chainId } = config[props.chain];
+    // const { chainId } = config[props.chain];
     let symbol, newAmount, to;
     const from = fromList[0].address;
     if (txData) {
       // nuls链token转账
       const contractInfo = await getContract(txData.contractAddress);
       if (!contractInfo.result) throw contractInfo.error?.message;
-      const txAmount = txData.args[1] && txData.args[1][0] || '0';
+      const txAmount = (txData.args[1] && txData.args[1][0]) || '0';
       symbol = contractInfo.result.symbol;
       newAmount = divisionDecimals(txAmount, contractInfo.result.decimals);
       to = txData.args[0][0] || '';
     } else {
       const { assetsChainId, assetsId, amount } = toList[0];
-      if (props.chain === 'NULS' && assetsChainId === chainId) {
-        symbol = 'NULS';
-        newAmount = divisionDecimals(amount, 8);
+      const asssetKey = assetsChainId + '-' + assetsId;
+      if (props.chain === 'NULS' && asssetKey === NKey) {
+        symbol = NSymbol;
+        newAmount = divisionDecimals(amount, NDecimals);
       } else {
         const currentAccount = getCurrentAccount(props.address);
         const NerveAddress = currentAccount.address.NERVE;
@@ -244,15 +251,11 @@ const signHex = ref('');
 async function submit() {
   loading.value = true;
   try {
-    const currentAccount = getCurrentAccount(props.address);
+    // const currentAccount = getCurrentAccount(props.address);
     const transfer = new NTransfer({
       chain: props.chain
     });
-    const hex = await transfer.multiSign(
-      txHex.value,
-      currentAccount.address.Ethereum,
-      currentAccount.pub
-    );
+    const hex = await transfer.multiSign(txHex.value, props.address, props.pub);
     if (restCount.value <= 1) {
       const res = await broadcastTx(props.chain, hex);
       if (res.result) {
@@ -274,7 +277,7 @@ async function submit() {
 async function signAndBroadcast() {
   loading.value = true;
   try {
-    const currentAccount = getCurrentAccount(props.address);
+    // const currentAccount = getCurrentAccount(props.address);
     const transfer = new NTransfer({
       chain: props.chain
     });
@@ -282,8 +285,8 @@ async function signAndBroadcast() {
     const isNULSLedger = provider?.isNabox && provider?.isNULSLedger;
     const hex = await transfer.signTx(
       txHex.value,
-      currentAccount.address.Ethereum,
-      currentAccount.pub,
+      props.address,
+      props.pub,
       isNULSLedger
     );
     const res = await broadcastTx(props.chain, hex);

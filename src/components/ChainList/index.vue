@@ -3,16 +3,16 @@
     <ul>
       <li
         v-for="item in props.chainList"
-        :key="item.label"
-        @click.stop="handleClick(item.label)"
+        :key="item.chainId"
+        @click.stop="handleClick(item.chainId)"
       >
         <p
           :class="{
-            active: item.label === props.current
+            active: item.chainId === props.current
           }"
         >
           <img :src="item.logo" alt="" />
-          {{ item.label }}
+          {{ item.chainName }}
         </p>
       </li>
       <div class="pop-arrow"></div>
@@ -22,30 +22,18 @@
 
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';
+import { IChain } from '@/config';
 
 const props = defineProps<{
   show: boolean;
-  chainList: any;
-  current: string;
+  chainList: IChain[];
+  current: number;
 }>();
 
 const emit = defineEmits<{
   (e: 'update:show', show: boolean): void;
-  (e: 'change', chain: string): void;
+  (e: 'change', chainId: number): void;
 }>();
-
-// const props = defineProps({
-//   show: {
-//     type: Boolean,
-//     default: false
-//   },
-//   chainList: {
-//     type: Object
-//   },
-//   current: String
-// });
-//
-// const emit = defineEmits(['update:show', 'change']);
 
 const wrapper = ref<HTMLElement>();
 
@@ -59,10 +47,10 @@ onMounted(() => {
   });
 });
 
-function handleClick(chain: string) {
-  if (chain === props.current) return;
+function handleClick(chainId: number) {
+  if (chainId === props.current) return;
   emit('update:show', false);
-  emit('change', chain);
+  emit('change', chainId);
 }
 </script>
 

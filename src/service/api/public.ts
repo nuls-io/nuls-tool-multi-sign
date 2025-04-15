@@ -1,6 +1,7 @@
 import { divisionAndFix, genId, Plus, Times } from '@/utils/util';
 import config from '@/config';
 import http from '@/service';
+import { NDecimals, NKey, NSymbol } from '@/constants/constants';
 
 import type {
   RpcRes,
@@ -37,6 +38,10 @@ export async function getNERVEAssets(address: string, all = false) {
     }
     result.result.map(v => {
       v.assetKey = v.chainId + '-' + v.assetId;
+      if (v.assetKey === NKey) {
+        v.decimals = NDecimals;
+        v.symbol = NSymbol;
+      }
       v.balanceStr = v.balance;
       if (v.balanceStr && v.balanceStr !== '0') {
         v.available = divisionAndFix(v.balanceStr, v.decimals, v.decimals);
@@ -87,12 +92,12 @@ export async function getNULSInfo(address: string): Promise<AssetItem> {
   });
   const res = {} as AssetItem;
   if (result.result) {
-    res.available = divisionAndFix(result.result.balance, 8, 8);
+    res.available = divisionAndFix(result.result.balance, NDecimals, NDecimals);
     res.chainId = chainId;
     res.assetId = assetId;
-    res.decimals = 8;
+    res.decimals = NDecimals;
     res.assetKey = chainId + '-' + assetId;
-    res.symbol = result.result.symbol;
+    res.symbol = NSymbol;
   }
   return res;
 }

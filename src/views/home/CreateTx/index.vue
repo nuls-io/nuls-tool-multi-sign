@@ -73,6 +73,7 @@ import { NTransfer } from '@/utils/api';
 import { timesDecimals, superLong, Times, Plus } from '@/utils/util';
 import { getContractCallData } from '@/utils/nulsContractValidate';
 import config from '@/config';
+import { NDecimals } from '@/constants/constants';
 
 import type { ValidAddressInfo } from './types';
 import type { AssetItem } from '@/service/api/types';
@@ -157,7 +158,7 @@ function validateAsset(rule: any, value: any, callback: any) {
 }
 
 function validateAmount(rule: any, value: any, callback: any) {
-  const decimals = chooseAsset.value.decimals || 8;
+  const decimals = chooseAsset.value.decimals || NDecimals;
   const reg = new RegExp(
     '^([1-9][\\d]{0,20}|0)(\\.[\\d]{0,' + decimals + '})?$'
   );

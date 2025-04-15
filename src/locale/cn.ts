@@ -49,7 +49,8 @@ const cn = {
     public4: '断开',
     public5: '浏览器中查看',
     public6: '如何使用？',
-    public7: '连接钱包'
+    public7: '连接钱包',
+    public8: '切换至NULS AI'
   },
   tip: {
     tip1: '请输入最少签名数量',

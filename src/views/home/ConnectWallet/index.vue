@@ -1,6 +1,7 @@
 <template>
   <div class="connect-wallet">
-    <span class="title">{{ $t('public.public7') }}</span>
+    <Button :title="$t('public.public7')" @click="connectProvider"></Button>
+    <!-- <span class="title">{{ $t('public.public7') }}</span>
     <div class="providers-wrap">
       <p
         v-for="item in providerList"
@@ -10,19 +11,18 @@
         <img :src="item.src" alt="" />
         {{ item.name }}
       </p>
-    </div>
+    </div> -->
   </div>
 </template>
 
 <script lang="ts" setup>
-import { providerList } from '@/hooks/useEthereum';
 import { ElMessage } from 'element-plus';
 
 const emit = defineEmits(['connect']);
 
 function connectProvider(provider: string) {
   if (!window[provider]) {
-    ElMessage.warning({ message: 'No provider was found' });
+    ElMessage.error({ message: 'No provider was found', duration: 200000 });
     return;
   }
   emit('connect', provider);

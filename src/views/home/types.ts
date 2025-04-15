@@ -5,7 +5,7 @@ export enum Tabs {
 }
 
 interface AddressItem {
-  Ethereum: string;
+  Ethereum?: string;
   NULS: string;
   NERVE: string;
 }

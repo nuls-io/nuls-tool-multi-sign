@@ -102,6 +102,15 @@
   }
 }
 
+.el-message--success {
+  background: #e4f7f1 !important;
+  border-color: transparent !important;
+  border-radius: 10px !important;
+  .el-message-icon--success, .el-message__content {
+    color: $BASE_NULS !important;
+  }
+}
+
 .el-overlay {
   position: absolute;
   .el-overlay-dialog {

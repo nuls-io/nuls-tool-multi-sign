@@ -3,16 +3,18 @@
     <Header
       :address="address"
       :chain="currentChain"
-      :providerType="providerType"
-      @switchChain="handleSwitch"
+      :chainId="chainId"
+      @switchChain="switchChain"
       @disconnect="disconnect"
     />
     <Home
       :address="address"
       :chain="currentChain"
+      :isWrongChain="isWrongChain"
       :providerType="providerType"
       :pub="pub"
-      @connect="connectWallet"
+      @connect="connect"
+      @switchToNULS="switchToNULS"
       @createAccount="createAccount"
     />
     <div class="how-to-use">
@@ -28,6 +30,7 @@ import { computed, onMounted } from 'vue';
 import Header from '@/components/Header/index.vue';
 import Home from './views/home/index.vue';
 import useEthereum from '@/hooks/useEthereum';
+import useProvider from './hooks/useProvider';
 import config from '@/config';
 import storage from '@/utils/storage';
 import { ElMessage } from 'element-plus';
@@ -36,16 +39,29 @@ import useLang from '@/hooks/useLang';
 import type { AccountItem } from '@/views/home/types';
 
 const {
-  address,
+  // address,
   providerType,
-  initProvider,
-  generateAddress,
+  // initProvider,
+  generateAddress
+  // pub,
+  // currentChain,
+  // switchChain,
+  // connect,
+  // disconnect
+} = useEthereum();
+
+const {
+  address,
   pub,
   currentChain,
-  switchChain,
+  chainId,
+  isWrongChain,
+  initProvider,
   connect,
-  disconnect
-} = useEthereum();
+  disconnect,
+  switchChain,
+  switchToNULS
+} = useProvider();
 
 const { lang, localeLang } = useLang();
 
@@ -53,13 +69,13 @@ const guideLink = computed(() => {
   const cnLink =
     'https://docs.nuls.io/zh/Guide/g_multiSignature_dapp_Guide.html';
   const enLink = 'https://docs.nuls.io/Guide/g_multiSignature_dapp_Guide.html';
-  return lang.value === 'CN' ? enLink : cnLink;
+  return lang.value === 'Zh' ? enLink : cnLink;
 });
 
 onMounted(() => {
   initProvider();
-  const chain = storage.get('currentChain') || 'NULS';
-  changeTheme(chain);
+  // const chain = storage.get('currentChain') || 'NULS';
+  // changeTheme(chain);
 });
 
 function changeTheme(chain: string) {
@@ -68,22 +84,6 @@ function changeTheme(chain: string) {
     root.classList.remove('nerve-chain');
   } else {
     root.classList.add('nerve-chain');
-  }
-}
-
-function handleSwitch(chain: string) {
-  changeTheme(chain);
-  switchChain(chain);
-}
-
-async function connectWallet(type: string) {
-  try {
-    await connect(type);
-  } catch (e) {
-    ElMessage.error({
-      message: e.message || e,
-      duration: 2000
-    });
   }
 }
 

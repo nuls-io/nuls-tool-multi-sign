@@ -18,6 +18,7 @@ import sdk from 'nerve-sdk-js/lib/api/sdk';
 const multi = require('nerve-sdk-js/lib/model/mutilsigntxsignatures');
 const CoinData = require('nerve-sdk-js/lib/model/coindata');
 const ContractData = require('nuls-sdk-js/lib/model/contractdata');
+const TxSignatures = require('nuls-sdk-js/lib/model/signatures');
 
 import { getAssetBalance } from '@/service/api';
 
@@ -106,7 +107,7 @@ export class NTransfer {
    */
   async signHash(hash: string, signAddress: string) {
     hash = hash.startsWith('0x') ? hash : '0x' + hash;
-    let flat = await this.provider.request({
+    let flat = await window.NaboxWallet.request({
       method: 'eth_sign',
       params: [signAddress, hash]
     });
@@ -188,8 +189,16 @@ export class NTransfer {
     // 反序列回交易对象
     const tAssemble = new txs.Transaction();
     tAssemble.parse(bufferReader);
-    const hash = '0x' + tAssemble.getHash().toString('hex');
-    const signature = await this.signHash(hash, signAddress);
+    // const hash = '0x' + tAssemble.getHash().toString('hex');
+    // const signature = await this.signHash(hash, '0xCb1fA0c0b7B4d57848BddaA4276CE0776a3215d2');
+
+    const signedHex = await window.NaboxWallet.nai.signTxHex({
+      address: signAddress,
+      txHex: txHex
+    });
+
+    const tx = nerve.deserializationTx(signedHex);
+    const txSignatures = new TxSignatures(new BufferReader(tx.signatures, 0));
 
     //初始化签名对象
     const sign = new multi.MultiTransactionSignatures(0, null);
@@ -197,10 +206,10 @@ export class NTransfer {
     const signReader = new BufferReader(tAssemble.signatures, 0);
     sign.parse(signReader);
     // 追加签名到对象中
-    sign.addSign(Buffer.from(pub, 'hex'), Buffer.from(signature, 'hex'));
+    sign.addSign(Buffer.from(pub, 'hex'), txSignatures.list[0].signData);
     //组装到交易中
     tAssemble.signatures = sign.serialize();
-    console.log('txHash: ' + hash);
+    // console.log('txHash: ' + hash);
     //序列化交易，并返回
     return tAssemble.txSerialize().toString('hex');
   }
@@ -214,11 +223,16 @@ export class NTransfer {
     if (isNULSLedger) {
       return await window.nabox.signNULSTransaction({ txHex: txHex });
     } else {
-      const tAssemble = nerve.deserializationTx(txHex);
-      const hash = '0x' + tAssemble.getHash().toString('hex');
-      const signature = await this.signHash(hash, signAddress);
-      tAssemble.signatures = nerve.appSplicingPub(signature, pub);
-      return tAssemble.txSerialize().toString('hex');
+      const signedHex = await window.NaboxWallet.nai.signTxHex({
+        address: signAddress,
+        txHex: txHex
+      });
+      return signedHex;
+      // const tAssemble = nerve.deserializationTx(txHex);
+      // const hash = '0x' + tAssemble.getHash().toString('hex');
+      // const signature = await this.signHash(hash, signAddress);
+      // tAssemble.signatures = nerve.appSplicingPub(signature, pub);
+      // return tAssemble.txSerialize().toString('hex');
     }
   }
 

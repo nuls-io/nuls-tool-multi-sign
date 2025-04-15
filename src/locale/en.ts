@@ -49,7 +49,8 @@ const en = {
     public4: 'Disconnect',
     public5: 'View In Browser',
     public6: 'How to use?',
-    public7: 'Connect Wallet'
+    public7: 'Connect Wallet',
+    public8: 'Switch to NULS AI'
   },
   tip: {
     tip1: 'Please enter the minimum number of signatures',

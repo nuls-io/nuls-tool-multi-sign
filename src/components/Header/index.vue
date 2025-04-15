@@ -1,19 +1,10 @@
 <template>
   <div class="header-bar flex-between pd-15">
     <img class="logo" src="../../assets/img/logo.svg" alt="" />
-    <!--    <template v-if="props.chain === 'NULS'">
-          <img class="logo" src="../../assets/img/logo.svg" alt="" />
-        </template>
-        <template v-else>
-          <img class="nerve-logo" src="../../assets/img/nervelogo.svg" alt="" />
-        </template>-->
     <div class="right flex-between">
-      <div
-        class="account-wrap theme-bg flex-center"
-        v-if="props.address && props.providerType"
-      >
+      <div class="account-wrap theme-bg flex-center" v-if="props.address">
         <div class="flex-center" @click.stop="showSwitchChain">
-          <img class="chain-logo" :src="chainList[props.chain].logo" />
+          <img class="chain-logo" :src="chain?.logo" />
           <el-icon>
             <caret-bottom />
           </el-icon>
@@ -22,7 +13,7 @@
         <ChainList
           v-model:show="isShowSwitchChain"
           :chainList="chainList"
-          :current="props.chain"
+          :current="props.chainId"
           @change="switchChain"
         />
         <span class="theme-text" @click.stop="showAccount = true">
@@ -74,40 +65,37 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { superLong, toUrl } from '@/utils/util';
 import ChainList from '@/components/ChainList/index.vue';
-import NULSLogo from '@/assets/img/NULS.png';
-import NERVELogo from '@/assets/img/Nerve.png';
+import { chainList } from '@/config';
 import useLang from '../../hooks/useLang';
 import useCopy from '@/hooks/useCopy';
 
 const props = defineProps<{
   address: string;
+  chainId: number;
   chain: string;
-  providerType: string;
 }>();
 const emit = defineEmits<{
-  (e: 'switchChain', chain: string): void;
+  (e: 'switchChain', chainId: number): void;
   (e: 'disconnect'): void;
 }>();
-// const props = defineProps({
-//   address: String,
-//   chain: String,
-//   providerType: String
-// });
-// const emit = defineEmits(['switchChain', 'disconnect']);
 
-const chainList = {
-  NULS: {
-    logo: NULSLogo,
-    label: 'NULS'
-  },
-  NERVE: {
-    logo: NERVELogo,
-    label: 'NERVE'
-  }
-};
+const chain = computed(() => {
+  return chainList.find(v => v.chainId === props.chainId);
+});
+
+// const chainList = {
+//   NULS: {
+//     logo: NULSLogo,
+//     label: 'NULS AI'
+//   },
+//   NERVE: {
+//     logo: NERVELogo,
+//     label: 'NERVE'
+//   }
+// };
 
 const isShowSwitchChain = ref(false);
 
@@ -115,9 +103,9 @@ function showSwitchChain() {
   isShowSwitchChain.value = true;
 }
 
-function switchChain(chain: string) {
-  if (chain === props.chain) return;
-  emit('switchChain', chain);
+function switchChain(chainId: number) {
+  if (chainId === props.chainId) return;
+  emit('switchChain', chainId);
 }
 
 const showAccount = ref(false);
@@ -139,11 +127,7 @@ const { lang, switchLang } = useLang();
   height: 64px;
 
   .logo {
-    width: 75px;
-  }
-
-  .nerve-logo {
-    width: 100px;
+    width: 120px;
   }
 
   .account-wrap {
