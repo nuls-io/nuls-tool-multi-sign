@@ -120,7 +120,7 @@ const rules = reactive({
   amount: [
     {
       validator: validateAmount,
-      trigger: 'blur'
+      trigger: ['blur', 'change']
     }
   ],
   to: [
@@ -162,7 +162,7 @@ function validateAmount(rule: any, value: any, callback: any) {
   const reg = new RegExp(
     '^([1-9][\\d]{0,20}|0)(\\.[\\d]{0,' + decimals + '})?$'
   );
-  if (!reg.exec(value)) {
+  if (!reg.exec(value) || !Number(value)) {
     callback(t('tip.tip7'));
   } else if (
     chooseAsset.value &&
@@ -204,13 +204,18 @@ watch(
 );
 
 const showAddressSelect = ref(false);
-const addressList = ref(initAddressList());
 
-function initAddressList(): MultiAddress[] {
-  const accountList: AccountItem[] = storage.get('accountList') || [];
-  const currentAccount = accountList.find(v => v.pub === props.pub) || {};
-  return currentAccount['multi_' + props.chain] || [];
-}
+// watch
+const onActive = ref(1);
+const addressList = computed(() => {
+  // force update when tab active
+  if (onActive.value) {
+    const accountList: AccountItem[] = storage.get('accountList') || [];
+    const currentAccount = accountList.find(v => v.pub === props.pub) || {};
+    return currentAccount['multi_' + props.chain] || [];
+  }
+  return [];
+});
 
 function selectAddress(item: MultiAddress) {
   if (item.address !== formModel.from) {
@@ -311,7 +316,8 @@ function submit() {
 }
 
 function resetFields() {
-  addressList.value = initAddressList();
+  // addressList.value = initAddressList();
+  onActive.value = onActive.value + 1
   formModel.from = '';
   createTxForm.value?.resetFields();
   assetsList.value = [];
