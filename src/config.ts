@@ -30,7 +30,7 @@ const config = {
     timeout
   },
   prod: {
-    isBeta: true,
+    isBeta: false,
     NERVE: {
       chainName: 'NERVE',
       chainId: 9,
