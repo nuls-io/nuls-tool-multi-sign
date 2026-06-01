@@ -20,7 +20,10 @@ const cn = {
     sign12: '签名结果HEX',
     sign13: '已签名',
     sign14: '当前账户无签名权限',
-    sign15: '签名并广播'
+    sign15: '签名并广播',
+    sign16: '签名失败，请复制诊断信息发给客服排查',
+    sign17: '复制诊断信息',
+    sign18: '诊断信息已复制'
   },
   createAddress: {
     createAddress1:

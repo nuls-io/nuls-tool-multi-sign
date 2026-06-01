@@ -20,7 +20,11 @@ const en = {
     sign12: 'Signed HEX',
     sign13: 'Signed',
     sign14: 'The current account has no signature permission',
-    sign15: 'Sign And Broadcast'
+    sign15: 'Sign And Broadcast',
+    sign16:
+      'Signing failed. Please copy diagnostic info and send it to support.',
+    sign17: 'Copy diagnostic info',
+    sign18: 'Diagnostic info copied'
   },
   createAddress: {
     createAddress1:

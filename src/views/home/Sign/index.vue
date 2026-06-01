@@ -8,8 +8,13 @@
     />
     <div class="content" v-loading="loading">
       <template v-if="errorMsg">
-        <div class="hex-error">{{ $t('tip.tip9') }}</div>
+        <div class="hex-error">{{ errorMsg }}</div>
       </template>
+      <div class="diag-panel" v-if="showDiagnostic">
+        <p class="diag-tip">{{ $t('sign.sign16') }}</p>
+        <p class="diag-error" v-if="lastErrorText">{{ lastErrorText }}</p>
+        <Button :title="$t('sign.sign17')" @click="copyDiagnostic"></Button>
+      </div>
       <template v-if="txInfo.from">
         <div class="tx-info">
           <h5>{{ $t('sign.sign2') }}</h5>
@@ -87,7 +92,9 @@ import {
   msError,
   msLog,
   hexBrief,
-  MULTI_SIGN_DEBUG_TAG
+  MULTI_SIGN_DEBUG_TAG,
+  copyDiagnosticReport,
+  clearDiagnosticLogs
 } from '@/utils/multiSignDebug';
 import {
   broadcastTx,
@@ -247,6 +254,8 @@ async function deSerialize(hex: string) {
     }
     // console.log(signInfo.value, 'signInfo');
     errorMsg.value = '';
+    showDiagnostic.value = false;
+    lastErrorText.value = '';
   } catch (e) {
     msError('Sign.deSerialize failed', e, {
       debugTag: MULTI_SIGN_DEBUG_TAG,
@@ -255,15 +264,44 @@ async function deSerialize(hex: string) {
     txInfo.value = {} as TxInfo;
     signInfo.value = {} as SignInfo;
     errorMsg.value = t('tip.tip9');
+    openDiagnostic(e, { phase: 'deSerialize', txHex: hexBrief(hex) });
   }
   loading.value = false;
 }
 
 const signHex = ref('');
+const showDiagnostic = ref(false);
+const lastErrorText = ref('');
+
+function buildSignContext(extra: Record<string, unknown> = {}) {
+  return {
+    chain: props.chain,
+    signAddress: props.address,
+    pub: props.pub,
+    txHex: hexBrief(txHex.value),
+    txHexFull: txHex.value,
+    ...extra
+  };
+}
+
+function openDiagnostic(error: unknown, extra?: Record<string, unknown>) {
+  const err = error as { message?: string };
+  lastErrorText.value = err?.message || String(error);
+  showDiagnostic.value = true;
+}
+
+function copyDiagnostic() {
+  copyDiagnosticReport(buildSignContext({ lastError: lastErrorText.value }));
+  ElMessage.success(t('sign.sign18'));
+}
 
 // 签名交易
 async function submit() {
   loading.value = true;
+  showDiagnostic.value = false;
+  lastErrorText.value = '';
+  clearDiagnosticLogs();
+  msLog('Sign.submit:start', buildSignContext());
   try {
     // const currentAccount = getCurrentAccount(props.address);
     const transfer = new NTransfer({
@@ -283,19 +321,18 @@ async function submit() {
       signHex.value = hex;
     }
   } catch (e) {
-    msError('Sign.submit failed', e, {
-      chain: props.chain,
-      signAddress: props.address,
-      pub: props.pub,
-      debugTag: MULTI_SIGN_DEBUG_TAG
-    });
-    ElMessage.error(e.message || e);
+    msError('Sign.submit failed', e, buildSignContext());
+    openDiagnostic(e);
+    ElMessage.error((e as Error).message || String(e));
   }
   loading.value = false;
 }
 
 async function signAndBroadcast() {
   loading.value = true;
+  showDiagnostic.value = false;
+  lastErrorText.value = '';
+  clearDiagnosticLogs();
   try {
     // const currentAccount = getCurrentAccount(props.address);
     const transfer = new NTransfer({
@@ -318,7 +355,9 @@ async function signAndBroadcast() {
       ElMessage.error(t('error.' + res.error?.code));
     }
   } catch (e) {
-    ElMessage.error(e.message || e);
+    msError('Sign.signAndBroadcast failed', e, buildSignContext());
+    openDiagnostic(e);
+    ElMessage.error((e as Error).message || String(e));
   }
   loading.value = false;
 }
@@ -329,6 +368,9 @@ function resetFields() {
   signInfo.value = {} as SignInfo;
   signHex.value = '';
   errorMsg.value = '';
+  showDiagnostic.value = false;
+  lastErrorText.value = '';
+  clearDiagnosticLogs();
 }
 
 defineExpose({
@@ -349,6 +391,29 @@ defineExpose({
       text-align: center;
       font-size: 16px;
       color: #f56c6c;
+    }
+
+    .diag-panel {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #fff7e6;
+      border: 1px solid #ffe7ba;
+
+      .diag-tip {
+        font-size: 13px;
+        line-height: 1.5;
+        color: #ad6800;
+        margin-bottom: 8px;
+      }
+
+      .diag-error {
+        font-size: 12px;
+        line-height: 1.4;
+        color: #f56c6c;
+        word-break: break-all;
+        margin-bottom: 12px;
+      }
     }
   }
 
