@@ -178,39 +178,78 @@ export class NTransfer {
     return tAssemble.txSerialize().toString('hex');
   }
 
+  parseMultiSignatures(sigBuffer: Buffer) {
+    const sign = new multi.MultiTransactionSignatures(0, null);
+    sign.parse(new BufferReader(sigBuffer, 0));
+    return sign;
+  }
+
   /**
-   * @desc 多签交易签名
+   * 合并钱包 signTxHex 返回的签名。
+   * 钱包有时返回完整 MultiTransactionSignatures，有时只返回单条 P2PHK 签名。
+   */
+  mergeWalletMultiSignature(
+    originalSigBuffer: Buffer,
+    signedSigBuffer: Buffer,
+    pub: string
+  ) {
+    const beforeMulti = this.parseMultiSignatures(originalSigBuffer);
+    const beforeCount = beforeMulti.signatures.length;
+
+    try {
+      const signedMulti = this.parseMultiSignatures(signedSigBuffer);
+      const hasPub = signedMulti.signatures.some(
+        (item: { pubkey: Buffer }) => item.pubkey.toString('hex') === pub
+      );
+      if (hasPub && signedMulti.signatures.length > beforeCount) {
+        return signedSigBuffer;
+      }
+    } catch (e) {
+      // 非完整多签结构，继续尝试按普通签名解析
+    }
+
+    const txSignatures = new TxSignatures(
+      new BufferReader(signedSigBuffer, 0)
+    );
+    const item =
+      txSignatures.list.find(
+        (v: { publicKey: Buffer }) => v.publicKey.toString('hex') === pub
+      ) || txSignatures.list[txSignatures.list.length - 1];
+    if (!item) {
+      throw new Error('Signature not found for current public key');
+    }
+    beforeMulti.addSign(Buffer.from(pub, 'hex'), item.signData);
+    return beforeMulti.serialize();
+  }
+
+  /**
+   * @desc 多签交易签名（须走 Nabox signTxHex，不可用 eth_sign）
    * @param txHex 交易hex
    * @param signAddress 签名地址
    * @param pub 签名地址公钥
    */
   async multiSign(txHex: string, signAddress: string, pub: string) {
     const bufferReader = new BufferReader(Buffer.from(txHex, 'hex'), 0);
-    // 反序列回交易对象
     const tAssemble = new txs.Transaction();
     tAssemble.parse(bufferReader);
-    // const hash = '0x' + tAssemble.getHash().toString('hex');
-    // const signature = await this.signHash(hash, '0xCb1fA0c0b7B4d57848BddaA4276CE0776a3215d2');
+    const txHash = tAssemble.getHash().toString('hex');
+    const originalSignatures = Buffer.from(tAssemble.signatures);
 
     const signedHex = await window.NaboxWallet.nai.signTxHex({
       address: signAddress,
       txHex: txHex
     });
 
-    const tx = nerve.deserializationTx(signedHex);
-    const txSignatures = new TxSignatures(new BufferReader(tx.signatures, 0));
+    const signedTx = nerve.deserializationTx(signedHex);
+    if (signedTx.getHash().toString('hex') !== txHash) {
+      throw new Error('Transaction hash changed after signing');
+    }
 
-    //初始化签名对象
-    const sign = new multi.MultiTransactionSignatures(0, null);
-    // 反序列化签名对象
-    const signReader = new BufferReader(tAssemble.signatures, 0);
-    sign.parse(signReader);
-    // 追加签名到对象中
-    sign.addSign(Buffer.from(pub, 'hex'), txSignatures.list[0].signData);
-    //组装到交易中
-    tAssemble.signatures = sign.serialize();
-    // console.log('txHash: ' + hash);
-    //序列化交易，并返回
+    tAssemble.signatures = this.mergeWalletMultiSignature(
+      originalSignatures,
+      signedTx.signatures,
+      pub
+    );
     return tAssemble.txSerialize().toString('hex');
   }
 
@@ -272,7 +311,6 @@ export class NTransfer {
     const tx = new txs.Transaction();
     tx.parse(reader);
     const hash = tx.getHash().toString('hex');
-    console.log(tx.signatures.toString("hex"), "signatures", tx, hash)
     const coinData = new CoinData(new BufferReader(tx.coinData, 0));
     for (let item in coinData) {
       // eslint-disable-next-line no-prototype-builtins
