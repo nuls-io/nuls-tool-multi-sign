@@ -21,6 +21,13 @@ const ContractData = require('nuls-sdk-js/lib/model/contractdata');
 const TxSignatures = require('nuls-sdk-js/lib/model/signatures');
 
 import { getAssetBalance } from '@/service/api';
+import {
+  msLog,
+  msError,
+  hexBrief,
+  bufBrief,
+  MULTI_SIGN_DEBUG_TAG
+} from '@/utils/multiSignDebug';
 
 // import { broadcastHex, getAssetBalance } from "@/service/api";
 
@@ -178,10 +185,17 @@ export class NTransfer {
     return tAssemble.txSerialize().toString('hex');
   }
 
-  parseMultiSignatures(sigBuffer: Buffer) {
-    const sign = new multi.MultiTransactionSignatures(0, null);
-    sign.parse(new BufferReader(sigBuffer, 0));
-    return sign;
+  parseMultiSignatures(sigBuffer: Buffer, logLabel = 'signatures') {
+    try {
+      const sign = new multi.MultiTransactionSignatures(0, null);
+      sign.parse(new BufferReader(sigBuffer, 0));
+      return sign;
+    } catch (e) {
+      msError(`parseMultiSignatures failed (${logLabel})`, e, {
+        ...bufBrief(sigBuffer)
+      });
+      throw e;
+    }
   }
 
   /**
@@ -193,33 +207,80 @@ export class NTransfer {
     signedSigBuffer: Buffer,
     pub: string
   ) {
-    const beforeMulti = this.parseMultiSignatures(originalSigBuffer);
+    msLog('merge:start', {
+      pub,
+      original: bufBrief(originalSigBuffer),
+      signed: bufBrief(signedSigBuffer)
+    });
+
+    const beforeMulti = this.parseMultiSignatures(
+      originalSigBuffer,
+      'original'
+    );
     const beforeCount = beforeMulti.signatures.length;
+    msLog('merge:before', {
+      minSignCount: beforeMulti.m,
+      pubkeyCount: beforeMulti.pubkeyArray.length,
+      signedCount: beforeCount
+    });
 
     try {
-      const signedMulti = this.parseMultiSignatures(signedSigBuffer);
+      const signedMulti = this.parseMultiSignatures(
+        signedSigBuffer,
+        'signed-multi'
+      );
       const hasPub = signedMulti.signatures.some(
         (item: { pubkey: Buffer }) => item.pubkey.toString('hex') === pub
       );
+      msLog('merge:signed-multi-parse-ok', {
+        signedCount: signedMulti.signatures.length,
+        hasPub,
+        beforeCount
+      });
       if (hasPub && signedMulti.signatures.length > beforeCount) {
+        msLog('merge:mode', { mode: 'full-replace' });
         return signedSigBuffer;
       }
+      msLog('merge:signed-multi-skip', {
+        reason: !hasPub ? 'pub-not-in-signed' : 'signed-count-not-increased'
+      });
     } catch (e) {
-      // 非完整多签结构，继续尝试按普通签名解析
+      msLog('merge:signed-multi-parse-fail', {
+        message: (e as Error).message,
+        willTryTxSignatures: true
+      });
     }
 
-    const txSignatures = new TxSignatures(
-      new BufferReader(signedSigBuffer, 0)
-    );
-    const item =
-      txSignatures.list.find(
-        (v: { publicKey: Buffer }) => v.publicKey.toString('hex') === pub
-      ) || txSignatures.list[txSignatures.list.length - 1];
-    if (!item) {
-      throw new Error('Signature not found for current public key');
+    try {
+      const txSignatures = new TxSignatures(
+        new BufferReader(signedSigBuffer, 0)
+      );
+      msLog('merge:tx-signatures-parse-ok', {
+        listCount: txSignatures.list.length,
+        pubs: txSignatures.list.map((v: { publicKey: Buffer }) =>
+          v.publicKey.toString('hex').slice(0, 10)
+        )
+      });
+      const item =
+        txSignatures.list.find(
+          (v: { publicKey: Buffer }) => v.publicKey.toString('hex') === pub
+        ) || txSignatures.list[txSignatures.list.length - 1];
+      if (!item) {
+        throw new Error('Signature not found for current public key');
+      }
+      beforeMulti.addSign(Buffer.from(pub, 'hex'), item.signData);
+      msLog('merge:mode', {
+        mode: 'append-single',
+        signDataLen: item.signData.length
+      });
+      return beforeMulti.serialize();
+    } catch (e) {
+      msError('merge:tx-signatures-parse-fail', e, {
+        signed: bufBrief(signedSigBuffer),
+        pub
+      });
+      throw e;
     }
-    beforeMulti.addSign(Buffer.from(pub, 'hex'), item.signData);
-    return beforeMulti.serialize();
   }
 
   /**
@@ -229,28 +290,86 @@ export class NTransfer {
    * @param pub 签名地址公钥
    */
   async multiSign(txHex: string, signAddress: string, pub: string) {
-    const bufferReader = new BufferReader(Buffer.from(txHex, 'hex'), 0);
-    const tAssemble = new txs.Transaction();
-    tAssemble.parse(bufferReader);
-    const txHash = tAssemble.getHash().toString('hex');
-    const originalSignatures = Buffer.from(tAssemble.signatures);
-
-    const signedHex = await window.NaboxWallet.nai.signTxHex({
-      address: signAddress,
-      txHex: txHex
+    const traceId = Date.now().toString(36);
+    msLog('multiSign:start', {
+      traceId,
+      tag: MULTI_SIGN_DEBUG_TAG,
+      chain: this.chain,
+      signAddress,
+      pub,
+      txHex: hexBrief(txHex)
     });
 
-    const signedTx = nerve.deserializationTx(signedHex);
-    if (signedTx.getHash().toString('hex') !== txHash) {
-      throw new Error('Transaction hash changed after signing');
-    }
+    let step = 'parse-tx';
+    try {
+      const bufferReader = new BufferReader(Buffer.from(txHex, 'hex'), 0);
+      const tAssemble = new txs.Transaction();
+      tAssemble.parse(bufferReader);
+      const txHash = tAssemble.getHash().toString('hex');
+      const originalSignatures = Buffer.from(tAssemble.signatures);
 
-    tAssemble.signatures = this.mergeWalletMultiSignature(
-      originalSignatures,
-      signedTx.signatures,
-      pub
-    );
-    return tAssemble.txSerialize().toString('hex');
+      const beforeMulti = this.parseMultiSignatures(
+        originalSignatures,
+        'input'
+      );
+      msLog('multiSign:tx-parsed', {
+        traceId,
+        txHash,
+        originalSignatures: bufBrief(originalSignatures),
+        minSignCount: beforeMulti.m,
+        existingSignedCount: beforeMulti.signatures.length
+      });
+
+      step = 'wallet-signTxHex';
+      msLog('multiSign:call-wallet', { traceId, step });
+      const signedHex = await window.NaboxWallet.nai.signTxHex({
+        address: signAddress,
+        txHex: txHex
+      });
+      msLog('multiSign:wallet-returned', {
+        traceId,
+        signedHex: hexBrief(signedHex)
+      });
+
+      step = 'deserialize-signed';
+      const signedTx = nerve.deserializationTx(signedHex);
+      const signedHash = signedTx.getHash().toString('hex');
+      if (signedHash !== txHash) {
+        msError('multiSign:hash-mismatch', new Error('hash mismatch'), {
+          traceId,
+          txHash,
+          signedHash
+        });
+        throw new Error('Transaction hash changed after signing');
+      }
+
+      step = 'merge-signatures';
+      tAssemble.signatures = this.mergeWalletMultiSignature(
+        originalSignatures,
+        signedTx.signatures,
+        pub
+      );
+
+      const outHex = tAssemble.txSerialize().toString('hex');
+      const afterMulti = this.parseMultiSignatures(
+        Buffer.from(tAssemble.signatures),
+        'output'
+      );
+      msLog('multiSign:success', {
+        traceId,
+        outHex: hexBrief(outHex),
+        signedCount: afterMulti.signatures.length
+      });
+      return outHex;
+    } catch (e) {
+      msError(`multiSign:failed@${step}`, e, {
+        traceId,
+        signAddress,
+        pub,
+        txHex: hexBrief(txHex)
+      });
+      throw e;
+    }
   }
 
   async signTx(

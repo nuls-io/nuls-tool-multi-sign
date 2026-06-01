@@ -84,6 +84,12 @@ import Button from '@/components/Button/index.vue';
 import CopyWrapper from '@/components/CopyWrapper/index.vue';
 import { NTransfer } from '@/utils/api';
 import {
+  msError,
+  msLog,
+  hexBrief,
+  MULTI_SIGN_DEBUG_TAG
+} from '@/utils/multiSignDebug';
+import {
   broadcastTx,
   getNERVEAssets,
   getTxInfo,
@@ -219,6 +225,12 @@ async function deSerialize(hex: string) {
       type
     };
     const signedCount = transfer.getSignedCount(hex);
+    msLog('Sign.deSerialize ok', {
+      hash,
+      type,
+      signedCount: signedCount ? signedCount.signedInfo.length : 0,
+      minSignCount: signedCount ? signedCount.minSignCount : null
+    });
     if (signedCount) {
       generalTx.value = false;
       const { minSignCount, signedInfo, pubkeyArray } = signedCount;
@@ -236,11 +248,13 @@ async function deSerialize(hex: string) {
     // console.log(signInfo.value, 'signInfo');
     errorMsg.value = '';
   } catch (e) {
-    // console.log(e,33)
+    msError('Sign.deSerialize failed', e, {
+      debugTag: MULTI_SIGN_DEBUG_TAG,
+      txHex: hexBrief(hex)
+    });
     txInfo.value = {} as TxInfo;
     signInfo.value = {} as SignInfo;
     errorMsg.value = t('tip.tip9');
-    // console.log(e, '解析hex失败');
   }
   loading.value = false;
 }
@@ -269,6 +283,12 @@ async function submit() {
       signHex.value = hex;
     }
   } catch (e) {
+    msError('Sign.submit failed', e, {
+      chain: props.chain,
+      signAddress: props.address,
+      pub: props.pub,
+      debugTag: MULTI_SIGN_DEBUG_TAG
+    });
     ElMessage.error(e.message || e);
   }
   loading.value = false;
