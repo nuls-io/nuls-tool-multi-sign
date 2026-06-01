@@ -1,5 +1,8 @@
 <template>
-  <div class="sign-wrapper">
+  <div
+    class="sign-wrapper sign-wrapper--diag-bar"
+    :class="{ 'sign-wrapper--diag-error': showDiagnostic }"
+  >
     <el-input
       v-model.trim="txHex"
       :rows="3"
@@ -10,11 +13,6 @@
       <template v-if="errorMsg">
         <div class="hex-error">{{ errorMsg }}</div>
       </template>
-      <div class="diag-panel" v-if="showDiagnostic">
-        <p class="diag-tip">{{ $t('sign.sign16') }}</p>
-        <p class="diag-error" v-if="lastErrorText">{{ lastErrorText }}</p>
-        <Button :title="$t('sign.sign17')" @click="copyDiagnostic"></Button>
-      </div>
       <template v-if="txInfo.from">
         <div class="tx-info">
           <h5>{{ $t('sign.sign2') }}</h5>
@@ -79,11 +77,24 @@
         </div>
       </template>
     </div>
+    <Teleport to="body">
+      <div
+        ref="diagPanelRef"
+        class="multisign-diag-panel"
+        :class="{ 'multisign-diag-panel--error': showDiagnostic }"
+      >
+        <template v-if="showDiagnostic">
+          <p class="multisign-diag-tip">{{ $t('sign.sign16') }}</p>
+          <p class="multisign-diag-error" v-if="lastErrorText">{{ lastErrorText }}</p>
+        </template>
+        <Button :title="$t('sign.sign17')" @click="copyDiagnostic"></Button>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Button from '@/components/Button/index.vue';
 import CopyWrapper from '@/components/CopyWrapper/index.vue';
@@ -94,7 +105,10 @@ import {
   hexBrief,
   MULTI_SIGN_DEBUG_TAG,
   copyDiagnosticReport,
-  clearDiagnosticLogs
+  clearDiagnosticLogs,
+  getLastErrorMessage,
+  registerDiagnosticHandler,
+  unregisterDiagnosticHandler
 } from '@/utils/multiSignDebug';
 import {
   broadcastTx,
@@ -272,6 +286,25 @@ async function deSerialize(hex: string) {
 const signHex = ref('');
 const showDiagnostic = ref(false);
 const lastErrorText = ref('');
+const diagPanelRef = ref<HTMLElement | null>(null);
+
+onMounted(() => {
+  registerDiagnosticHandler(({ message }) => {
+    lastErrorText.value = message;
+    showDiagnostic.value = true;
+    scrollDiagnosticIntoView();
+  });
+});
+
+onUnmounted(() => {
+  unregisterDiagnosticHandler();
+});
+
+function scrollDiagnosticIntoView() {
+  nextTick(() => {
+    diagPanelRef.value?.scrollIntoView({ block: 'end', behavior: 'smooth' });
+  });
+}
 
 function buildSignContext(extra: Record<string, unknown> = {}) {
   return {
@@ -287,7 +320,11 @@ function buildSignContext(extra: Record<string, unknown> = {}) {
 function openDiagnostic(error: unknown, extra?: Record<string, unknown>) {
   const err = error as { message?: string };
   lastErrorText.value = err?.message || String(error);
+  if (extra) {
+    msLog('Sign.diagnostic-context', extra);
+  }
   showDiagnostic.value = true;
+  scrollDiagnosticIntoView();
 }
 
 function copyDiagnostic() {
@@ -295,8 +332,24 @@ function copyDiagnostic() {
   ElMessage.success(t('sign.sign18'));
 }
 
+/** 钱包内报错但未 reject 时，submit 结束仍无 signHex，兜底展示诊断条 */
+function ensureDiagnosticAfterFailedSign(hadSignHex: string) {
+  if (signHex.value && signHex.value !== hadSignHex) {
+    return;
+  }
+  if (showDiagnostic.value) {
+    return;
+  }
+  const fromLog = getLastErrorMessage();
+  openDiagnostic(
+    new Error(fromLog || t('sign.sign19')),
+    { phase: 'ensureAfterSubmit', hadSignHex: !!hadSignHex }
+  );
+}
+
 // 签名交易
 async function submit() {
+  const signHexBefore = signHex.value;
   loading.value = true;
   showDiagnostic.value = false;
   lastErrorText.value = '';
@@ -315,20 +368,24 @@ async function submit() {
         signHex.value = hex;
         txHash.value = res.result.hash;
       } else {
-        ElMessage.error(t('error.' + res.error?.code));
+        const msg = t('error.' + res.error?.code);
+        msError('Sign.broadcast failed', new Error(msg), buildSignContext());
+        ElMessage.error(msg);
       }
     } else {
       signHex.value = hex;
     }
   } catch (e) {
     msError('Sign.submit failed', e, buildSignContext());
-    openDiagnostic(e);
     ElMessage.error((e as Error).message || String(e));
+  } finally {
+    loading.value = false;
+    ensureDiagnosticAfterFailedSign(signHexBefore);
   }
-  loading.value = false;
 }
 
 async function signAndBroadcast() {
+  const signHexBefore = signHex.value;
   loading.value = true;
   showDiagnostic.value = false;
   lastErrorText.value = '';
@@ -352,14 +409,17 @@ async function signAndBroadcast() {
       signHex.value = hex;
       txHash.value = res.result.hash;
     } else {
-      ElMessage.error(t('error.' + res.error?.code));
+      const msg = t('error.' + res.error?.code);
+      msError('Sign.broadcast failed', new Error(msg), buildSignContext());
+      ElMessage.error(msg);
     }
   } catch (e) {
     msError('Sign.signAndBroadcast failed', e, buildSignContext());
-    openDiagnostic(e);
     ElMessage.error((e as Error).message || String(e));
+  } finally {
+    loading.value = false;
+    ensureDiagnosticAfterFailedSign(signHexBefore);
   }
-  loading.value = false;
 }
 
 function resetFields() {
@@ -384,6 +444,14 @@ defineExpose({
     margin-bottom: 20px;
   }
 
+  &.sign-wrapper--diag-bar {
+    padding-bottom: 72px;
+  }
+
+  &.sign-wrapper--diag-bar.sign-wrapper--diag-error {
+    padding-bottom: 160px;
+  }
+
   .content {
     min-height: 300px;
 
@@ -391,29 +459,6 @@ defineExpose({
       text-align: center;
       font-size: 16px;
       color: #f56c6c;
-    }
-
-    .diag-panel {
-      margin-top: 16px;
-      padding: 12px;
-      border-radius: 8px;
-      background: #fff7e6;
-      border: 1px solid #ffe7ba;
-
-      .diag-tip {
-        font-size: 13px;
-        line-height: 1.5;
-        color: #ad6800;
-        margin-bottom: 8px;
-      }
-
-      .diag-error {
-        font-size: 12px;
-        line-height: 1.4;
-        color: #f56c6c;
-        word-break: break-all;
-        margin-bottom: 12px;
-      }
     }
   }
 
@@ -452,6 +497,65 @@ defineExpose({
       font-size: 15px;
       margin-bottom: 10px;
     }
+  }
+}
+
+/* Teleport 到 body，不可嵌套在 .sign-wrapper 下 */
+.multisign-diag-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 99999;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 10px 16px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  background: #fff;
+  border-top: 1px solid #e4e7ed;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+
+  .button-wrapper {
+    margin: 0;
+  }
+
+  &--error {
+    padding: 12px 16px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    background: #fff7e6;
+    border-top: 2px solid #fa8c16;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.18);
+    animation: multisign-diag-in 0.35s ease-out;
+  }
+
+  .multisign-diag-tip {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #ad6800;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+
+  .multisign-diag-error {
+    font-size: 12px;
+    line-height: 1.4;
+    color: #f56c6c;
+    word-break: break-all;
+    margin-bottom: 10px;
+    max-height: 56px;
+    overflow-y: auto;
+  }
+
+}
+
+@keyframes multisign-diag-in {
+  from {
+    transform: translateY(100%);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 </style>

@@ -24,7 +24,9 @@ const en = {
     sign16:
       'Signing failed. Please copy diagnostic info and send it to support.',
     sign17: 'Copy diagnostic info',
-    sign18: 'Diagnostic info copied'
+    sign18: 'Diagnostic info copied',
+    sign19:
+      'Signing did not complete. If the wallet showed an error, still copy the diagnostic info below for support.'
   },
   createAddress: {
     createAddress1:
