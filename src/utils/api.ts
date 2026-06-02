@@ -198,6 +198,10 @@ export class NTransfer {
     }
   }
 
+  isHexString(value: unknown) {
+    return typeof value === 'string' && /^[0-9a-fA-F]+$/.test(value);
+  }
+
   /**
    * 合并钱包 signTxHex 返回的签名。
    * 钱包有时返回完整 MultiTransactionSignatures，有时只返回单条 P2PHK 签名。
@@ -330,6 +334,20 @@ export class NTransfer {
         traceId,
         signedHex: hexBrief(signedHex)
       });
+
+      step = 'validate-signed-hex';
+      if (!this.isHexString(signedHex)) {
+        throw new Error('Invalid signed hex from wallet: non-hex');
+      }
+      if (signedHex.length % 2 !== 0) {
+        throw new Error('Invalid signed hex from wallet: odd length');
+      }
+      // 至少需要是可反序列化交易长度，避免 BufferReader 越界异常信息不明确
+      if (signedHex.length < 120) {
+        throw new Error(
+          `Invalid signed hex from wallet: too short (${signedHex.length})`
+        );
+      }
 
       step = 'deserialize-signed';
       const signedTx = nerve.deserializationTx(signedHex);

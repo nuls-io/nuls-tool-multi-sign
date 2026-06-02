@@ -50,6 +50,17 @@ function safeStringify(obj: Record<string, unknown>) {
   }
 }
 
+function compactDataForReport(data: Record<string, unknown>) {
+  const compact: Record<string, unknown> = { ...data };
+  if (typeof compact.txHexFull === 'string') {
+    compact.txHexFull = `[omitted:${compact.txHexFull.length}]`;
+  }
+  if (typeof compact.signedHexFull === 'string') {
+    compact.signedHexFull = `[omitted:${compact.signedHexFull.length}]`;
+  }
+  return compact;
+}
+
 export function clearDiagnosticLogs() {
   entries.length = 0;
 }
@@ -97,7 +108,7 @@ export function buildDiagnosticReport(
         lines.push(`  message: ${e.message}`);
       }
       if (e.data) {
-        lines.push(`  data: ${safeStringify(e.data)}`);
+        lines.push(`  data: ${safeStringify(compactDataForReport(e.data))}`);
       }
       if (e.stack) {
         lines.push(`  stack: ${e.stack}`);
