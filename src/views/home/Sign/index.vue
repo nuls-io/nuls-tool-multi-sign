@@ -332,6 +332,11 @@ function copyDiagnostic() {
   ElMessage.success(t('sign.sign18'));
 }
 
+function clearDiagnosticState() {
+  showDiagnostic.value = false;
+  lastErrorText.value = '';
+}
+
 /** 钱包内报错但未 reject 时，submit 结束仍无 signHex，兜底展示诊断条 */
 function ensureDiagnosticAfterFailedSign(hadSignHex: string) {
   if (signHex.value && signHex.value !== hadSignHex) {
@@ -351,8 +356,7 @@ function ensureDiagnosticAfterFailedSign(hadSignHex: string) {
 async function submit() {
   const signHexBefore = signHex.value;
   loading.value = true;
-  showDiagnostic.value = false;
-  lastErrorText.value = '';
+  clearDiagnosticState();
   clearDiagnosticLogs();
   msLog('Sign.submit:start', buildSignContext());
   try {
@@ -367,6 +371,7 @@ async function submit() {
         ElMessage.success(t('tip.tip10'));
         signHex.value = hex;
         txHash.value = res.result.hash;
+        clearDiagnosticState();
       } else {
         const msg = t('error.' + res.error?.code);
         msError('Sign.broadcast failed', new Error(msg), buildSignContext());
@@ -374,6 +379,7 @@ async function submit() {
       }
     } else {
       signHex.value = hex;
+      clearDiagnosticState();
     }
   } catch (e) {
     msError('Sign.submit failed', e, buildSignContext());
@@ -387,8 +393,7 @@ async function submit() {
 async function signAndBroadcast() {
   const signHexBefore = signHex.value;
   loading.value = true;
-  showDiagnostic.value = false;
-  lastErrorText.value = '';
+  clearDiagnosticState();
   clearDiagnosticLogs();
   try {
     // const currentAccount = getCurrentAccount(props.address);
@@ -408,6 +413,7 @@ async function signAndBroadcast() {
       ElMessage.success(t('tip.tip10'));
       signHex.value = hex;
       txHash.value = res.result.hash;
+      clearDiagnosticState();
     } else {
       const msg = t('error.' + res.error?.code);
       msError('Sign.broadcast failed', new Error(msg), buildSignContext());
